@@ -1,5 +1,6 @@
+import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Environment, ContactShadows, Html } from '@react-three/drei'
+import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import Motorcycle from './components/Motorcycle'
 import './App.css'
 
@@ -25,7 +26,7 @@ function App() {
           letterSpacing: '3px',
           textShadow: '0 2px 10px rgba(0,0,0,0.5)',
         }}>
-          HONDA UNICORN 150
+          HONDA CB UNICORN 150
         </h1>
         <p style={{
           color: '#888',
@@ -34,59 +35,70 @@ function App() {
           margin: '4px 0 0 0',
           letterSpacing: '1px',
         }}>
-          Drag to rotate • Scroll to zoom • Right-click to pan
+          Drag to rotate &bull; Scroll to zoom &bull; Right-click to pan
+        </p>
+        <p style={{
+          color: '#666',
+          fontFamily: 'monospace',
+          fontSize: '11px',
+          margin: '4px 0 0 0',
+        }}>
+          Built with real specs: 1338mm wheelbase &bull; 149.1cc &bull; 18&quot; wheels &bull; CSG boolean geometry
         </p>
       </div>
 
       <Canvas
-        camera={{ position: [1.2, 0.8, 1.2], fov: 45, near: 0.01, far: 100 }}
+        camera={{ position: [1.8, 1.0, 1.8], fov: 40, near: 0.01, far: 100 }}
         shadows
         gl={{ antialias: true, alpha: false }}
       >
-        {/* Lighting */}
-        <ambientLight intensity={0.4} />
-        <directionalLight
-          position={[5, 5, 5]}
-          intensity={1.2}
-          castShadow
-          shadow-mapSize={[2048, 2048]}
-        />
-        <directionalLight position={[-3, 3, -3]} intensity={0.5} />
-        <pointLight position={[0, 3, 0]} intensity={0.3} />
+        <Suspense fallback={null}>
+          {/* Lighting */}
+          <ambientLight intensity={0.35} />
+          <directionalLight
+            position={[5, 5, 5]}
+            intensity={1.3}
+            castShadow
+            shadow-mapSize={[2048, 2048]}
+          />
+          <directionalLight position={[-3, 4, -3]} intensity={0.5} />
+          <pointLight position={[0, 3, 0]} intensity={0.25} />
+          <pointLight position={[1.3, 0.5, 1]} intensity={0.15} color="#ffffee" />
 
-        {/* Environment for reflections */}
-        <Environment preset="city" />
+          {/* Environment for PBR reflections */}
+          <Environment preset="city" />
 
-        {/* The Motorcycle */}
-        <Motorcycle position={[0, 0.12, 0]} />
+          {/* Honda Unicorn - centered on wheelbase midpoint */}
+          <Motorcycle position={[-0.669, 0, 0]} />
 
-        {/* Ground */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.12, 0]} receiveShadow>
-          <planeGeometry args={[10, 10]} />
-          <meshStandardMaterial color="#222233" roughness={0.8} metalness={0.2} />
-        </mesh>
+          {/* Ground plane */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+            <planeGeometry args={[12, 12]} />
+            <meshStandardMaterial color="#222233" roughness={0.85} metalness={0.15} />
+          </mesh>
 
-        {/* Contact shadows for realism */}
-        <ContactShadows
-          position={[0, -0.115, 0]}
-          opacity={0.6}
-          scale={4}
-          blur={2.5}
-          far={1.5}
-        />
+          {/* Contact shadows */}
+          <ContactShadows
+            position={[0, 0.005, 0]}
+            opacity={0.55}
+            scale={5}
+            blur={2.5}
+            far={2}
+          />
 
-        {/* Grid helper for scale reference */}
-        <gridHelper args={[4, 20, '#333355', '#2a2a44']} position={[0, -0.11, 0]} />
+          {/* Grid */}
+          <gridHelper args={[6, 30, '#333355', '#2a2a44']} position={[0, 0.001, 0]} />
 
-        {/* Camera controls */}
-        <OrbitControls
-          makeDefault
-          minDistance={0.5}
-          maxDistance={5}
-          target={[0, 0.35, 0]}
-          enableDamping
-          dampingFactor={0.05}
-        />
+          {/* Camera controls - target bike center */}
+          <OrbitControls
+            makeDefault
+            minDistance={0.5}
+            maxDistance={6}
+            target={[0, 0.5, 0]}
+            enableDamping
+            dampingFactor={0.05}
+          />
+        </Suspense>
       </Canvas>
     </div>
   )

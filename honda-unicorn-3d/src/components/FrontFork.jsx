@@ -1,178 +1,237 @@
-import { useRef, useMemo } from 'react'
+import { useRef } from 'react'
 import * as THREE from 'three'
+import { SPECS, POS } from './dimensions'
+
+// Honda Unicorn 150: Telescopic front fork
+// Rake angle ~26 degrees (typical for commuter bikes)
+// Fork tube diameter ~33mm
 
 export default function FrontFork({ position = [0, 0, 0] }) {
   const group = useRef()
-  const forkAngle = 0.45 // rake angle
+  const wb = SPECS.wheelbase
+  const forkAngle = 0.45  // ~26 degrees rake
+  const forkTubeOD = 0.0165 // ~33mm fork tubes
+  const forkSpacing = 0.065 // distance between fork legs (center to center)
 
   return (
     <group ref={group} position={position}>
       <group rotation={[0, 0, -forkAngle]}>
-        {/* Left fork tube - upper (chrome) */}
-        <mesh position={[0, 0.15, -0.065]}>
-          <cylinderGeometry args={[0.016, 0.016, 0.3, 12]} />
-          <meshStandardMaterial color="#ddd" roughness={0.1} metalness={0.9} />
+        {/* Left fork - upper tube (chrome) */}
+        <mesh position={[0, 0.15, -forkSpacing]}>
+          <cylinderGeometry args={[forkTubeOD, forkTubeOD, 0.28, 12]} />
+          <meshStandardMaterial color="#ddd" roughness={0.08} metalness={0.92} />
         </mesh>
 
-        {/* Left fork tube - lower (dark) */}
-        <mesh position={[0, -0.12, -0.065]}>
-          <cylinderGeometry args={[0.02, 0.02, 0.24, 12]} />
+        {/* Left fork - lower leg (dark) */}
+        <mesh position={[0, -0.10, -forkSpacing]}>
+          <cylinderGeometry args={[forkTubeOD + 0.004, forkTubeOD + 0.004, 0.22, 12]} />
           <meshStandardMaterial color="#333" roughness={0.5} metalness={0.4} />
         </mesh>
 
-        {/* Right fork tube - upper (chrome) */}
-        <mesh position={[0, 0.15, 0.065]}>
-          <cylinderGeometry args={[0.016, 0.016, 0.3, 12]} />
-          <meshStandardMaterial color="#ddd" roughness={0.1} metalness={0.9} />
+        {/* Right fork - upper tube (chrome) */}
+        <mesh position={[0, 0.15, forkSpacing]}>
+          <cylinderGeometry args={[forkTubeOD, forkTubeOD, 0.28, 12]} />
+          <meshStandardMaterial color="#ddd" roughness={0.08} metalness={0.92} />
         </mesh>
 
-        {/* Right fork tube - lower (dark) */}
-        <mesh position={[0, -0.12, 0.065]}>
-          <cylinderGeometry args={[0.02, 0.02, 0.24, 12]} />
+        {/* Right fork - lower leg (dark) */}
+        <mesh position={[0, -0.10, forkSpacing]}>
+          <cylinderGeometry args={[forkTubeOD + 0.004, forkTubeOD + 0.004, 0.22, 12]} />
           <meshStandardMaterial color="#333" roughness={0.5} metalness={0.4} />
         </mesh>
 
-        {/* Triple clamp - upper */}
+        {/* Fork dust seals */}
+        {[-forkSpacing, forkSpacing].map((z, i) => (
+          <mesh key={i} position={[0, 0.02, z]}>
+            <cylinderGeometry args={[forkTubeOD + 0.005, forkTubeOD + 0.005, 0.015, 12]} />
+            <meshStandardMaterial color="#222" roughness={0.9} metalness={0.05} />
+          </mesh>
+        ))}
+
+        {/* Upper triple clamp */}
         <mesh position={[0, 0.28, 0]}>
-          <boxGeometry args={[0.04, 0.02, 0.18]} />
+          <boxGeometry args={[0.04, 0.018, forkSpacing * 2 + 0.04]} />
           <meshStandardMaterial color="#333" roughness={0.4} metalness={0.6} />
         </mesh>
 
-        {/* Triple clamp - lower */}
-        <mesh position={[0, 0.08, 0]}>
-          <boxGeometry args={[0.04, 0.02, 0.16]} />
+        {/* Lower triple clamp */}
+        <mesh position={[0, 0.06, 0]}>
+          <boxGeometry args={[0.035, 0.016, forkSpacing * 2 + 0.03]} />
           <meshStandardMaterial color="#333" roughness={0.4} metalness={0.6} />
         </mesh>
 
         {/* Axle clamp at bottom */}
-        <mesh position={[0, -0.24, 0]}>
-          <boxGeometry args={[0.03, 0.025, 0.16]} />
+        <mesh position={[0, -0.21, 0]}>
+          <boxGeometry args={[0.025, 0.022, forkSpacing * 2 + 0.02]} />
           <meshStandardMaterial color="#444" roughness={0.4} metalness={0.5} />
         </mesh>
 
-        {/* Front fender */}
-        <mesh position={[0.02, -0.15, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.14, 0.14, 0.12, 16, 1, true, -0.8, 1.6]} />
-          <meshStandardMaterial color="#cc0000" roughness={0.3} metalness={0.2} side={THREE.DoubleSide} />
+        {/* Front fender - red */}
+        <mesh position={[0.02, -0.13, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[SPECS.frontTireRadius - 0.01, SPECS.frontTireRadius - 0.01, 0.09, 16, 1, true, -0.8, 1.6]} />
+          <meshStandardMaterial color="#cc0000" roughness={0.25} metalness={0.25} side={THREE.DoubleSide} />
+        </mesh>
+
+        {/* Fender stay */}
+        <mesh position={[0.01, -0.04, -forkSpacing + 0.01]}>
+          <boxGeometry args={[0.003, 0.12, 0.006]} />
+          <meshStandardMaterial color="#555" roughness={0.4} metalness={0.5} />
+        </mesh>
+        <mesh position={[0.01, -0.04, forkSpacing - 0.01]}>
+          <boxGeometry args={[0.003, 0.12, 0.006]} />
+          <meshStandardMaterial color="#555" roughness={0.4} metalness={0.5} />
         </mesh>
       </group>
 
-      {/* Handlebar */}
-      <group position={[0.08, 0.42, 0]}>
-        {/* Main handlebar tube */}
+      {/* === Handlebar === */}
+      <group position={[0.06, 0.40, 0]}>
+        {/* Main bar */}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.01, 0.01, 0.52, 8]} />
-          <meshStandardMaterial color="#333" roughness={0.5} metalness={0.4} />
+          <cylinderGeometry args={[0.011, 0.011, 0.56, 8]} />
+          <meshStandardMaterial color="#333" roughness={0.45} metalness={0.45} />
         </mesh>
 
+        {/* Bar risers */}
+        {[-0.04, 0.04].map((z, i) => (
+          <mesh key={i} position={[0, -0.025, z]}>
+            <cylinderGeometry args={[0.012, 0.012, 0.04, 8]} />
+            <meshStandardMaterial color="#333" roughness={0.4} metalness={0.6} />
+          </mesh>
+        ))}
+
         {/* Left grip */}
-        <mesh position={[0, 0, -0.26]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.014, 0.014, 0.08, 12]} />
-          <meshStandardMaterial color="#111" roughness={0.9} metalness={0.05} />
+        <mesh position={[0, 0, -0.28]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.015, 0.015, 0.09, 12]} />
+          <meshStandardMaterial color="#111" roughness={0.92} metalness={0.03} />
         </mesh>
 
         {/* Right grip (throttle) */}
-        <mesh position={[0, 0, 0.26]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.014, 0.014, 0.08, 12]} />
-          <meshStandardMaterial color="#111" roughness={0.9} metalness={0.05} />
+        <mesh position={[0, 0, 0.28]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.015, 0.015, 0.09, 12]} />
+          <meshStandardMaterial color="#111" roughness={0.92} metalness={0.03} />
         </mesh>
 
-        {/* Left brake lever */}
-        <mesh position={[0.02, -0.01, -0.22]} rotation={[0, 0.5, 0]}>
-          <boxGeometry args={[0.1, 0.008, 0.015]} />
-          <meshStandardMaterial color="#888" roughness={0.3} metalness={0.7} />
+        {/* Left lever (clutch) */}
+        <mesh position={[0.03, -0.01, -0.22]} rotation={[0, 0.4, 0]}>
+          <boxGeometry args={[0.10, 0.006, 0.012]} />
+          <meshStandardMaterial color="#888" roughness={0.25} metalness={0.75} />
         </mesh>
 
-        {/* Right brake lever */}
-        <mesh position={[0.02, -0.01, 0.22]} rotation={[0, -0.5, 0]}>
-          <boxGeometry args={[0.1, 0.008, 0.015]} />
-          <meshStandardMaterial color="#888" roughness={0.3} metalness={0.7} />
+        {/* Right lever (brake) */}
+        <mesh position={[0.03, -0.01, 0.22]} rotation={[0, -0.4, 0]}>
+          <boxGeometry args={[0.10, 0.006, 0.012]} />
+          <meshStandardMaterial color="#888" roughness={0.25} metalness={0.75} />
         </mesh>
+
+        {/* Switch blocks */}
+        {[-0.2, 0.2].map((z, i) => (
+          <mesh key={i} position={[0, 0.005, z]}>
+            <boxGeometry args={[0.03, 0.02, 0.03]} />
+            <meshStandardMaterial color="#222" roughness={0.7} metalness={0.2} />
+          </mesh>
+        ))}
 
         {/* Left mirror */}
-        <group position={[0.02, 0.02, -0.24]}>
-          <mesh position={[0, 0.08, -0.04]} rotation={[0.3, 0, 0]}>
-            <cylinderGeometry args={[0.003, 0.003, 0.1, 6]} />
+        <group position={[0.01, 0.02, -0.26]}>
+          <mesh position={[0, 0.06, -0.03]} rotation={[0.25, 0, 0]}>
+            <cylinderGeometry args={[0.003, 0.003, 0.08, 6]} />
             <meshStandardMaterial color="#333" roughness={0.4} metalness={0.6} />
           </mesh>
-          <mesh position={[0, 0.14, -0.06]} rotation={[0.8, 0, 0]}>
-            <sphereGeometry args={[0.03, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <mesh position={[0, 0.11, -0.05]} rotation={[0.7, 0, 0]}>
+            <sphereGeometry args={[0.028, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
             <meshStandardMaterial color="#222" roughness={0.5} metalness={0.5} />
           </mesh>
-          <mesh position={[0, 0.145, -0.062]} rotation={[0.8, 0, 0]}>
-            <circleGeometry args={[0.028, 12]} />
-            <meshStandardMaterial color="#aaddff" roughness={0.05} metalness={0.9} />
+          <mesh position={[0, 0.115, -0.053]} rotation={[0.7, 0, 0]}>
+            <circleGeometry args={[0.025, 12]} />
+            <meshStandardMaterial color="#aaddff" roughness={0.03} metalness={0.92} />
           </mesh>
         </group>
 
         {/* Right mirror */}
-        <group position={[0.02, 0.02, 0.24]}>
-          <mesh position={[0, 0.08, 0.04]} rotation={[-0.3, 0, 0]}>
-            <cylinderGeometry args={[0.003, 0.003, 0.1, 6]} />
+        <group position={[0.01, 0.02, 0.26]}>
+          <mesh position={[0, 0.06, 0.03]} rotation={[-0.25, 0, 0]}>
+            <cylinderGeometry args={[0.003, 0.003, 0.08, 6]} />
             <meshStandardMaterial color="#333" roughness={0.4} metalness={0.6} />
           </mesh>
-          <mesh position={[0, 0.14, 0.06]} rotation={[-0.8, 0, 0]}>
-            <sphereGeometry args={[0.03, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <mesh position={[0, 0.11, 0.05]} rotation={[-0.7, 0, 0]}>
+            <sphereGeometry args={[0.028, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
             <meshStandardMaterial color="#222" roughness={0.5} metalness={0.5} />
           </mesh>
-          <mesh position={[0, 0.145, 0.062]} rotation={[-0.8, 0, 0]}>
-            <circleGeometry args={[0.028, 12]} />
-            <meshStandardMaterial color="#aaddff" roughness={0.05} metalness={0.9} />
+          <mesh position={[0, 0.115, 0.053]} rotation={[-0.7, 0, 0]}>
+            <circleGeometry args={[0.025, 12]} />
+            <meshStandardMaterial color="#aaddff" roughness={0.03} metalness={0.92} />
           </mesh>
         </group>
       </group>
 
-      {/* Headlight */}
-      <group position={[0.2, 0.32, 0]}>
+      {/* === Headlight === */}
+      <group position={[0.18, 0.32, 0]}>
         {/* Housing */}
         <mesh>
-          <sphereGeometry args={[0.06, 16, 16, 0, Math.PI]} />
+          <sphereGeometry args={[0.058, 16, 16, 0, Math.PI]} />
           <meshStandardMaterial color="#222" roughness={0.5} metalness={0.4} />
         </mesh>
-        {/* Lens */}
-        <mesh position={[0.005, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <circleGeometry args={[0.055, 24]} />
-          <meshStandardMaterial
-            color="#ffffee"
-            roughness={0.05}
-            metalness={0.1}
-            emissive="#ffffcc"
-            emissiveIntensity={0.3}
-          />
-        </mesh>
-        {/* Chrome ring */}
+        {/* Reflector */}
         <mesh position={[0.003, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <ringGeometry args={[0.05, 0.06, 24]} />
-          <meshStandardMaterial color="#ccc" roughness={0.1} metalness={0.9} side={THREE.DoubleSide} />
+          <circleGeometry args={[0.053, 24]} />
+          <meshStandardMaterial color="#ffffee" roughness={0.04} metalness={0.1} emissive="#ffffcc" emissiveIntensity={0.4} />
         </mesh>
+        {/* Chrome bezel */}
+        <mesh position={[0.002, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+          <ringGeometry args={[0.048, 0.058, 24]} />
+          <meshStandardMaterial color="#ddd" roughness={0.08} metalness={0.92} side={THREE.DoubleSide} />
+        </mesh>
+        {/* Headlight bulb glow */}
+        <pointLight position={[0.02, 0, 0]} intensity={0.2} distance={0.5} color="#ffffdd" />
       </group>
 
-      {/* Turn signals */}
-      <mesh position={[0.16, 0.26, -0.1]}>
-        <sphereGeometry args={[0.015, 8, 8]} />
-        <meshStandardMaterial color="#ff8800" roughness={0.3} metalness={0.2} emissive="#ff6600" emissiveIntensity={0.2} />
-      </mesh>
-      <mesh position={[0.16, 0.26, 0.1]}>
-        <sphereGeometry args={[0.015, 8, 8]} />
-        <meshStandardMaterial color="#ff8800" roughness={0.3} metalness={0.2} emissive="#ff6600" emissiveIntensity={0.2} />
-      </mesh>
+      {/* Front turn signals */}
+      {[-0.09, 0.09].map((z, i) => (
+        <mesh key={i} position={[0.14, 0.26, z]}>
+          <sphereGeometry args={[0.013, 8, 8]} />
+          <meshStandardMaterial color="#ff8800" roughness={0.3} emissive="#ff6600" emissiveIntensity={0.25} />
+        </mesh>
+      ))}
 
-      {/* Instrument cluster */}
-      <group position={[0.12, 0.42, 0]}>
-        {/* Speedometer */}
-        <mesh rotation={[0.6, 0, 0]}>
-          <cylinderGeometry args={[0.035, 0.035, 0.02, 16]} />
+      {/* === Instrument cluster === */}
+      <group position={[0.10, 0.42, 0]}>
+        {/* Speedometer housing */}
+        <mesh rotation={[0.55, 0, 0]}>
+          <cylinderGeometry args={[0.038, 0.038, 0.02, 16]} />
           <meshStandardMaterial color="#111" roughness={0.7} metalness={0.3} />
         </mesh>
-        <mesh position={[0, 0.008, 0.008]} rotation={[0.6, 0, 0]}>
-          <circleGeometry args={[0.032, 16]} />
-          <meshStandardMaterial color="#0a0a0a" roughness={0.1} metalness={0.3} />
+        {/* Speedometer face */}
+        <mesh position={[0, 0.006, 0.006]} rotation={[0.55, 0, 0]}>
+          <circleGeometry args={[0.035, 16]} />
+          <meshStandardMaterial color="#0a0a0a" roughness={0.08} metalness={0.3} />
         </mesh>
-        {/* Tachometer */}
-        <mesh position={[-0.04, 0, 0.03]} rotation={[0.6, 0, 0]}>
-          <cylinderGeometry args={[0.025, 0.025, 0.02, 16]} />
+        {/* Needle */}
+        <mesh position={[0, 0.008, 0.008]} rotation={[0.55, 0, 0.3]}>
+          <boxGeometry args={[0.002, 0.025, 0.001]} />
+          <meshStandardMaterial color="#ff3333" emissive="#ff0000" emissiveIntensity={0.5} />
+        </mesh>
+
+        {/* Tachometer (smaller, to the left) */}
+        <mesh position={[-0.05, 0, 0.025]} rotation={[0.55, 0, 0]}>
+          <cylinderGeometry args={[0.026, 0.026, 0.018, 16]} />
           <meshStandardMaterial color="#111" roughness={0.7} metalness={0.3} />
         </mesh>
+        <mesh position={[-0.05, 0.006, 0.03]} rotation={[0.55, 0, 0]}>
+          <circleGeometry args={[0.023, 12]} />
+          <meshStandardMaterial color="#0a0a0a" roughness={0.08} metalness={0.3} />
+        </mesh>
+
+        {/* Indicator lights */}
+        {[-0.015, 0, 0.015].map((x, i) => (
+          <mesh key={i} position={[x - 0.02, 0.012, 0.035]} rotation={[0.55, 0, 0]}>
+            <circleGeometry args={[0.004, 8]} />
+            <meshStandardMaterial
+              color={['#00ff00', '#ff0000', '#0088ff'][i]}
+              emissive={['#00ff00', '#ff0000', '#0088ff'][i]}
+              emissiveIntensity={0.3}
+            />
+          </mesh>
+        ))}
       </group>
     </group>
   )
