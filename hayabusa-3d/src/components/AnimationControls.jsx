@@ -55,7 +55,7 @@ const labelStyle = {
   textAlign: 'right',
 }
 
-// Part specs for Hayabusa GSX1300R
+// Part specs for Hayabusa
 const PART_SPECS = {
   frame: { name: 'Frame', specs: 'Twin-Spar Aluminum Frame' },
   rearWheel: { name: 'Rear Wheel', specs: '190/50-17, 260mm disc' },
@@ -267,8 +267,8 @@ export default function AnimationControls() {
               <div style={sectionHeader}>PAINT COLOR</div>
               <div style={{ padding: '4px 12px 8px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {[
-                  '#003DA5', '#0066cc', '#001a4d', '#333333', '#ffffff',
-                  '#cc0000', '#8800cc', '#00aacc', '#aa0044', '#c0c0c0',
+                  '#003DA5', '#000000', '#c0c0c0', '#cc0000', '#ffffff',
+                  '#1a1a2e', '#004400', '#8B0000', '#333333', '#daa520',
                 ].map(color => (
                   <button
                     key={color}

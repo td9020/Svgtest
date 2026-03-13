@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useCallback } from 'react'
 import { useFrame } from '@react-three/fiber'
 import Wheel from './Wheel'
 import Engine from './Engine'
@@ -9,6 +9,8 @@ import Exhaust from './Exhaust'
 import FrontFork from './FrontFork'
 import TailSection from './TailSection'
 import Bodywork from './Bodywork'
+import ChainDrive from './ChainDrive'
+import Cables from './Cables'
 import { SPECS, POS } from './dimensions'
 import useAnimationStore from '../store/animationStore'
 
@@ -54,7 +56,15 @@ export default function Motorcycle({ position = [0, 0, 0] }) {
     explodeProgress,
     headlightOn,
     turnSignals,
+    turnSignalBlink,
     fairingTransparent,
+    spokedWheels,
+    paintColor,
+    showCables,
+    chainAnimate,
+    chainOffset,
+    selectedPart,
+    selectPart,
   } = useAnimationStore()
 
   // Exploded view offsets
@@ -70,6 +80,7 @@ export default function Motorcycle({ position = [0, 0, 0] }) {
     frontFork: [ex * 0.25, ex * 0.18, 0],
     tail:      [-ex * 0.30, ex * 0.12, 0],
     bodywork:  [0, ex * 0.20, ex * 0.25],
+    chain:     [0, -ex * 0.1, ex * 0.15],
   }
 
   function addOffset(base, offset) {
@@ -79,60 +90,119 @@ export default function Motorcycle({ position = [0, 0, 0] }) {
   // Fairing opacity: transparent when X-ray is on
   const fairingOpacity = fairingTransparent ? 0.15 : 1.0
 
+  // Click handler for part selection/highlighting
+  const handleClick = useCallback((partName) => (e) => {
+    e.stopPropagation()
+    selectPart(partName)
+  }, [selectPart])
+
+  // Highlight wrapper - emissive glow when selected
+  const isSelected = (partName) => selectedPart === partName
+
   return (
     <group ref={group} position={position}>
       {/* Frame - the skeleton (twin-spar aluminum) */}
-      <Frame position={addOffset([0, 0, 0], explodeOffsets.frame)} />
+      <group onClick={handleClick('frame')}>
+        <Frame position={addOffset([0, 0, 0], explodeOffsets.frame)} />
+        {isSelected('frame') && (
+          <pointLight position={addOffset([wb * 0.4, 0.5, 0], explodeOffsets.frame)} intensity={0.5} color="#003DA5" distance={0.8} />
+        )}
+      </group>
 
       {/* Rear wheel - at origin (x=0) */}
-      <Wheel
-        position={addOffset([0, rearAxleY, 0], explodeOffsets.rearWheel)}
-        isRear
-        spinAngle={wheelAngle}
-      />
+      <group onClick={handleClick('rearWheel')}>
+        <Wheel
+          position={addOffset([0, rearAxleY, 0], explodeOffsets.rearWheel)}
+          isRear
+          spinAngle={wheelAngle}
+          spoked={spokedWheels}
+        />
+      </group>
 
       {/* Front wheel - at wheelbase distance */}
-      <Wheel
-        position={addOffset([wb, frontAxleY, 0], explodeOffsets.frontWheel)}
-        spinAngle={wheelAngle}
-      />
+      <group onClick={handleClick('frontWheel')}>
+        <Wheel
+          position={addOffset([wb, frontAxleY, 0], explodeOffsets.frontWheel)}
+          spinAngle={wheelAngle}
+          spoked={spokedWheels}
+        />
+      </group>
 
       {/* Engine - inline-4, mounted in the frame */}
-      <Engine
-        position={addOffset([wb * 0.38, 0.34, 0], explodeOffsets.engine)}
-        pistonOffset={pistonOffset}
-      />
+      <group onClick={handleClick('engine')}>
+        <Engine
+          position={addOffset([wb * 0.38, 0.34, 0], explodeOffsets.engine)}
+          pistonOffset={pistonOffset}
+        />
+        {isSelected('engine') && (
+          <pointLight position={addOffset([wb * 0.38, 0.34, 0], explodeOffsets.engine)} intensity={0.5} color="#ff8800" distance={0.6} />
+        )}
+      </group>
 
       {/* Fuel tank - on the backbone, larger than most */}
-      <FuelTank position={addOffset([wb * 0.56, sh + 0.06, 0], explodeOffsets.tank)} />
+      <group onClick={handleClick('fuelTank')}>
+        <FuelTank
+          position={addOffset([wb * 0.56, sh + 0.06, 0], explodeOffsets.tank)}
+          paintColor={paintColor}
+        />
+      </group>
 
       {/* Seat - behind the tank */}
-      <Seat position={addOffset([wb * 0.22, sh + 0.01, 0], explodeOffsets.seat)} />
+      <group onClick={handleClick('seat')}>
+        <Seat position={addOffset([wb * 0.22, sh + 0.01, 0], explodeOffsets.seat)} />
+      </group>
 
       {/* Exhaust system - 4-into-2-into-1 */}
-      <Exhaust position={addOffset([0, 0, 0], explodeOffsets.exhaust)} />
+      <group onClick={handleClick('exhaust')}>
+        <Exhaust position={addOffset([0, 0, 0], explodeOffsets.exhaust)} />
+      </group>
 
       {/* Front fork, clip-on bars, dual headlights, TFT cluster */}
-      <FrontFork
-        position={addOffset([wb - 0.08, frontAxleY + 0.12, 0], explodeOffsets.frontFork)}
-        forkCompression={forkCompression}
-        steeringAngle={steeringAngle}
-        headlightOn={headlightOn}
-        turnSignalsOn={turnSignals}
-      />
+      <group onClick={handleClick('frontFork')}>
+        <FrontFork
+          position={addOffset([wb - 0.08, frontAxleY + 0.12, 0], explodeOffsets.frontFork)}
+          forkCompression={forkCompression}
+          steeringAngle={steeringAngle}
+          headlightOn={headlightOn}
+          turnSignalsOn={turnSignals}
+          blinkOn={turnSignalBlink}
+          paintColor={paintColor}
+        />
+      </group>
 
       {/* Tail section */}
-      <TailSection
-        position={addOffset([0, rearAxleY, 0], explodeOffsets.tail)}
-        turnSignalsOn={turnSignals}
-        headlightOn={headlightOn}
-      />
+      <group onClick={handleClick('tail')}>
+        <TailSection
+          position={addOffset([0, rearAxleY, 0], explodeOffsets.tail)}
+          turnSignalsOn={turnSignals}
+          headlightOn={headlightOn}
+          blinkOn={turnSignalBlink}
+          paintColor={paintColor}
+        />
+      </group>
 
       {/* FULL FAIRING - Bodywork (the defining Hayabusa feature!) */}
-      <Bodywork
-        position={addOffset([0, 0, 0], explodeOffsets.bodywork)}
-        fairingOpacity={fairingOpacity}
-      />
+      <group onClick={handleClick('bodywork')}>
+        <Bodywork
+          position={addOffset([0, 0, 0], explodeOffsets.bodywork)}
+          fairingOpacity={fairingOpacity}
+          paintColor={paintColor}
+        />
+      </group>
+
+      {/* Chain drive system */}
+      <group onClick={handleClick('chain')}>
+        <ChainDrive
+          position={addOffset([0, 0, 0], explodeOffsets.chain)}
+          wheelAngle={wheelAngle}
+          chainOffset={chainOffset}
+        />
+      </group>
+
+      {/* Cable routing */}
+      {showCables && (
+        <Cables steeringAngle={steeringAngle} />
+      )}
 
       {/* Kickstand (animated via ref) */}
       <mesh ref={kickstandRef} position={[wb * 0.28, 0.12, 0.10]} rotation={[0.15, 0, 0.35]}>
@@ -172,6 +242,16 @@ export default function Motorcycle({ position = [0, 0, 0] }) {
         <cylinderGeometry args={[0.025, 0.025, 0.010, 16]} />
         <meshStandardMaterial color="#555" roughness={0.4} metalness={0.6} />
       </mesh>
+
+      {/* Selected part info overlay light */}
+      {selectedPart && (
+        <pointLight
+          position={[wb * 0.5, 1.0, 0]}
+          intensity={0.3}
+          color="#003DA5"
+          distance={2}
+        />
+      )}
     </group>
   )
 }
