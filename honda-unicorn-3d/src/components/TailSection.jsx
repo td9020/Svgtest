@@ -1,4 +1,5 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { SPECS, POS } from './dimensions'
 
@@ -6,8 +7,17 @@ import { SPECS, POS } from './dimensions'
 // Monoshock suspension, rear drum brake
 // Rear tire: 100/90-18
 
-export default function TailSection({ position = [0, 0, 0] }) {
+export default function TailSection({ position = [0, 0, 0], turnSignalsOn = false, headlightOn = true }) {
   const group = useRef()
+  const [blinkOn, setBlinkOn] = useState(false)
+
+  useFrame(() => {
+    if (turnSignalsOn) {
+      setBlinkOn(Math.sin(Date.now() * 0.01) > 0)
+    } else if (blinkOn) {
+      setBlinkOn(false)
+    }
+  })
   const rearTireR = SPECS.rearTireRadius
 
   return (
@@ -38,17 +48,22 @@ export default function TailSection({ position = [0, 0, 0] }) {
           roughness={0.18}
           metalness={0.08}
           emissive="#ff0000"
-          emissiveIntensity={0.35}
+          emissiveIntensity={headlightOn ? 0.35 : 0.08}
           transparent
           opacity={0.88}
         />
       </mesh>
 
-      {/* Rear turn signals */}
+      {/* Rear turn signals (blink when active) */}
       {[-0.075, 0.075].map((z, i) => (
         <mesh key={i} position={[-0.04, rearTireR + 0.12, z]}>
           <sphereGeometry args={[0.011, 8, 8]} />
-          <meshStandardMaterial color="#ff8800" roughness={0.3} emissive="#ff6600" emissiveIntensity={0.2} />
+          <meshStandardMaterial
+            color={turnSignalsOn && blinkOn ? "#ffaa00" : "#ff8800"}
+            roughness={0.3}
+            emissive={turnSignalsOn && blinkOn ? "#ffaa00" : "#ff6600"}
+            emissiveIntensity={turnSignalsOn && blinkOn ? 1.2 : 0.2}
+          />
         </mesh>
       ))}
 

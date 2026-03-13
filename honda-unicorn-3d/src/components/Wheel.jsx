@@ -14,6 +14,7 @@ export default function Wheel({
   position = [0, 0, 0],
   isRear = false,
   hasFrontDisc = false,
+  spinAngle = 0,
 }) {
   const group = useRef()
 
@@ -30,7 +31,7 @@ export default function Wheel({
     : SPECS.rearDrumDiameter / 2    // 0.065m
 
   return (
-    <group ref={group} position={position}>
+    <group ref={group} position={position} rotation={[0, 0, spinAngle]}>
       {/* Tire */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[tireMidRadius, tubeRadius, 24, 48]} />

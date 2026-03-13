@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import Motorcycle from './components/Motorcycle'
+import AnimationControls from './components/AnimationControls'
 import './App.css'
 
 function App() {
@@ -46,6 +47,9 @@ function App() {
           Built with real specs: 1338mm wheelbase &bull; 149.1cc &bull; 18&quot; wheels &bull; CSG boolean geometry
         </p>
       </div>
+
+      {/* Animation control panel */}
+      <AnimationControls />
 
       <Canvas
         camera={{ position: [1.8, 1.0, 1.8], fov: 40, near: 0.01, far: 100 }}

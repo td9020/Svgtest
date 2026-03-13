@@ -12,7 +12,7 @@ import { useMultiCSG } from './CSGMesh'
 const ENGINE_COLOR = '#3a3a3a'
 const FIN_COLOR = '#555'
 
-export default function Engine({ position = [0, 0, 0] }) {
+export default function Engine({ position = [0, 0, 0], pistonOffset = 0 }) {
   const group = useRef()
 
   const bore = SPECS.bore         // 0.0573m
@@ -132,6 +132,17 @@ export default function Engine({ position = [0, 0, 0] }) {
             <meshStandardMaterial color="#ddd" roughness={0.8} metalness={0.1} />
           </mesh>
         </group>
+
+        {/* Piston (animated) */}
+        <mesh position={[0, pistonOffset, 0]}>
+          <cylinderGeometry args={[bore / 2 - 0.002, bore / 2 - 0.002, 0.02, 16]} />
+          <meshStandardMaterial color="#aaa" roughness={0.2} metalness={0.85} />
+        </mesh>
+        {/* Connecting rod */}
+        <mesh position={[0, pistonOffset - 0.03, 0]}>
+          <cylinderGeometry args={[0.005, 0.005, 0.04, 6]} />
+          <meshStandardMaterial color="#888" roughness={0.3} metalness={0.7} />
+        </mesh>
 
         {/* Cam chain cover */}
         <mesh position={[0, 0.04, 0.055]}>

@@ -1,4 +1,5 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { SPECS, POS } from './dimensions'
 
@@ -6,15 +7,26 @@ import { SPECS, POS } from './dimensions'
 // Rake angle ~26 degrees (typical for commuter bikes)
 // Fork tube diameter ~33mm
 
-export default function FrontFork({ position = [0, 0, 0] }) {
+export default function FrontFork({ position = [0, 0, 0], forkCompression = 0, steeringAngle = 0, headlightOn = true, turnSignalsOn = false }) {
   const group = useRef()
+  const [blinkOn, setBlinkOn] = useState(false)
+
+  useFrame(() => {
+    if (turnSignalsOn) {
+      // Blink at ~1.5 Hz
+      setBlinkOn(Math.sin(Date.now() * 0.01) > 0)
+    } else if (blinkOn) {
+      setBlinkOn(false)
+    }
+  })
+
   const wb = SPECS.wheelbase
   const forkAngle = 0.45  // ~26 degrees rake
   const forkTubeOD = 0.0165 // ~33mm fork tubes
   const forkSpacing = 0.065 // distance between fork legs (center to center)
 
   return (
-    <group ref={group} position={position}>
+    <group ref={group} position={position} rotation={[0, steeringAngle, 0]}>
       <group rotation={[0, 0, -forkAngle]}>
         {/* Left fork - upper tube (chrome) */}
         <mesh position={[0, 0.15, -forkSpacing]}>
@@ -22,8 +34,8 @@ export default function FrontFork({ position = [0, 0, 0] }) {
           <meshStandardMaterial color="#ddd" roughness={0.08} metalness={0.92} />
         </mesh>
 
-        {/* Left fork - lower leg (dark) */}
-        <mesh position={[0, -0.10, -forkSpacing]}>
+        {/* Left fork - lower leg (dark) - slides with compression */}
+        <mesh position={[0, -0.10 - forkCompression, -forkSpacing]}>
           <cylinderGeometry args={[forkTubeOD + 0.004, forkTubeOD + 0.004, 0.22, 12]} />
           <meshStandardMaterial color="#333" roughness={0.5} metalness={0.4} />
         </mesh>
@@ -34,8 +46,8 @@ export default function FrontFork({ position = [0, 0, 0] }) {
           <meshStandardMaterial color="#ddd" roughness={0.08} metalness={0.92} />
         </mesh>
 
-        {/* Right fork - lower leg (dark) */}
-        <mesh position={[0, -0.10, forkSpacing]}>
+        {/* Right fork - lower leg (dark) - slides with compression */}
+        <mesh position={[0, -0.10 - forkCompression, forkSpacing]}>
           <cylinderGeometry args={[forkTubeOD + 0.004, forkTubeOD + 0.004, 0.22, 12]} />
           <meshStandardMaterial color="#333" roughness={0.5} metalness={0.4} />
         </mesh>
@@ -174,7 +186,7 @@ export default function FrontFork({ position = [0, 0, 0] }) {
         {/* Reflector */}
         <mesh position={[0.003, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
           <circleGeometry args={[0.053, 24]} />
-          <meshStandardMaterial color="#ffffee" roughness={0.04} metalness={0.1} emissive="#ffffcc" emissiveIntensity={0.4} />
+          <meshStandardMaterial color={headlightOn ? "#ffffee" : "#888"} roughness={0.04} metalness={0.1} emissive={headlightOn ? "#ffffcc" : "#000"} emissiveIntensity={headlightOn ? 0.4 : 0} />
         </mesh>
         {/* Chrome bezel */}
         <mesh position={[0.002, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
@@ -182,14 +194,19 @@ export default function FrontFork({ position = [0, 0, 0] }) {
           <meshStandardMaterial color="#ddd" roughness={0.08} metalness={0.92} side={THREE.DoubleSide} />
         </mesh>
         {/* Headlight bulb glow */}
-        <pointLight position={[0.02, 0, 0]} intensity={0.2} distance={0.5} color="#ffffdd" />
+        {headlightOn && <pointLight position={[0.02, 0, 0]} intensity={0.2} distance={0.5} color="#ffffdd" />}
       </group>
 
-      {/* Front turn signals */}
+      {/* Front turn signals (blink when active) */}
       {[-0.09, 0.09].map((z, i) => (
         <mesh key={i} position={[0.14, 0.26, z]}>
           <sphereGeometry args={[0.013, 8, 8]} />
-          <meshStandardMaterial color="#ff8800" roughness={0.3} emissive="#ff6600" emissiveIntensity={0.25} />
+          <meshStandardMaterial
+            color={turnSignalsOn && blinkOn ? "#ffaa00" : "#ff8800"}
+            roughness={0.3}
+            emissive={turnSignalsOn && blinkOn ? "#ffaa00" : "#ff6600"}
+            emissiveIntensity={turnSignalsOn && blinkOn ? 1.2 : 0.25}
+          />
         </mesh>
       ))}
 
