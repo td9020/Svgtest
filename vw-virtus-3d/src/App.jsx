@@ -1,121 +1,100 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
+import Car from './components/Car';
+import AnimationControls from './components/AnimationControls';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
-
+function GroundPlane() {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.005, 0]} receiveShadow>
+      <planeGeometry args={[30, 30]} />
+      <meshStandardMaterial color="#1a1a2e" roughness={0.8} metalness={0.2} />
+    </mesh>
+  );
 }
 
-export default App
+function SceneLighting() {
+  return (
+    <>
+      <ambientLight intensity={0.4} />
+      <directionalLight
+        position={[5, 8, 5]}
+        intensity={1.2}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-far={50}
+        shadow-camera-left={-5}
+        shadow-camera-right={5}
+        shadow-camera-top={5}
+        shadow-camera-bottom={-5}
+      />
+      <directionalLight position={[-3, 5, -3]} intensity={0.4} color="#aabbff" />
+      <pointLight position={[0, 3, 3]} intensity={0.5} color="#ffffff" />
+      <pointLight position={[0, 2, -3]} intensity={0.3} color="#ffddaa" />
+      <hemisphereLight intensity={0.3} groundColor="#1a1a2e" />
+    </>
+  );
+}
+
+function Title() {
+  return (
+    <div style={{
+      position: 'fixed',
+      top: '20px',
+      left: '20px',
+      color: '#ffffff',
+      fontFamily: "'Segoe UI', system-ui, sans-serif",
+      zIndex: 1000,
+      pointerEvents: 'none',
+    }}>
+      <div style={{ fontSize: '10px', letterSpacing: '4px', color: '#6688bb', fontWeight: '700' }}>
+        VOLKSWAGEN
+      </div>
+      <div style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '6px', color: '#ffffff' }}>
+        VIRTUS
+      </div>
+      <div style={{ fontSize: '10px', color: '#556688', letterSpacing: '2px', marginTop: '2px' }}>
+        1.0 TSI 3-CYLINDER TURBO SEDAN
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <div style={{ width: '100vw', height: '100vh', background: '#0a0a1a' }}>
+      <Title />
+      <Canvas
+        shadows
+        camera={{ position: [4, 2, 4], fov: 35 }}
+        gl={{ antialias: true, toneMapping: 3, toneMappingExposure: 1.0 }}
+      >
+        <SceneLighting />
+        <Car />
+        <GroundPlane />
+        <ContactShadows
+          position={[0, 0.001, 0]}
+          opacity={0.6}
+          scale={12}
+          blur={2.5}
+          far={4}
+          color="#000011"
+        />
+        <Environment preset="city" background={false} />
+        <OrbitControls
+          target={[0, 0.7, 0]}
+          enablePan={true}
+          enableDamping={true}
+          dampingFactor={0.1}
+          minDistance={2}
+          maxDistance={15}
+          minPolarAngle={0.1}
+          maxPolarAngle={Math.PI / 2 - 0.05}
+        />
+      </Canvas>
+      <AnimationControls />
+    </div>
+  );
+}

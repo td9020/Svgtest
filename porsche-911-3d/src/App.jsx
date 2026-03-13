@@ -1,121 +1,107 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Environment } from '@react-three/drei';
+import Car from './components/Car';
+import AnimationControls from './components/AnimationControls';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
-
+export default function App() {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+    <div style={{ width: '100vw', height: '100vh', background: '#0a0a0a' }}>
+      {/* Title */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 14,
+          left: 20,
+          zIndex: 100,
+          fontFamily: 'monospace',
+        }}
+      >
+        <h1
+          style={{
+            color: '#FF0000',
+            fontSize: '18px',
+            letterSpacing: '3px',
+            margin: 0,
+            fontWeight: 'bold',
+          }}
         >
-          Count is {count}
-        </button>
-      </section>
+          PORSCHE 911 GT3 (992)
+        </h1>
+        <p
+          style={{
+            color: '#666',
+            fontSize: '10px',
+            margin: '4px 0 0 0',
+            letterSpacing: '1px',
+          }}
+        >
+          4.0L FLAT-6 | 502 HP @ 8400 RPM | 9000 RPM REDLINE
+        </p>
+      </div>
 
-      <div className="ticks"></div>
+      <Canvas
+        camera={{ position: [5, 2, 5], fov: 32 }}
+        shadows
+        gl={{ antialias: true, toneMapping: 3 }}
+      >
+        <color attach="background" args={['#0a0a0a']} />
+        <fog attach="fog" args={['#0a0a0a', 8, 25]} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {/* Lighting */}
+        <ambientLight intensity={0.3} />
+        <directionalLight
+          position={[5, 8, 5]}
+          intensity={1.2}
+          castShadow
+          shadow-mapSize={[2048, 2048]}
+          shadow-camera-far={20}
+          shadow-camera-left={-5}
+          shadow-camera-right={5}
+          shadow-camera-top={5}
+          shadow-camera-bottom={-5}
+        />
+        <directionalLight position={[-4, 4, -3]} intensity={0.4} color="#aaccff" />
+        <pointLight position={[0, 3, 0]} intensity={0.3} color="#ffffff" />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {/* Environment for reflections */}
+        <Environment preset="city" />
+
+        {/* Ground plane */}
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, 0, 0]}
+          receiveShadow
+        >
+          <planeGeometry args={[30, 30]} />
+          <meshStandardMaterial
+            color="#111111"
+            metalness={0.2}
+            roughness={0.8}
+          />
+        </mesh>
+
+        {/* Ground grid */}
+        <gridHelper
+          args={[20, 40, '#222222', '#181818']}
+          position={[0, 0.001, 0]}
+        />
+
+        {/* The Car */}
+        <Car />
+
+        <OrbitControls
+          target={[0, 0.6, 0]}
+          maxPolarAngle={Math.PI / 2 - 0.05}
+          minDistance={2}
+          maxDistance={15}
+          enableDamping
+          dampingFactor={0.05}
+        />
+      </Canvas>
+
+      <AnimationControls />
+    </div>
+  );
 }
-
-export default App
