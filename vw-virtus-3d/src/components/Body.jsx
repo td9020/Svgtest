@@ -49,7 +49,7 @@ function createBodyShape() {
   return shape;
 }
 
-function BodySide({ side }) {
+function BodySide({ side, paintColor }) {
   const xSign = side === 'left' ? 1 : -1;
   const halfW = VW.bodyWidth / 2;
 
@@ -58,7 +58,7 @@ function BodySide({ side }) {
   return (
     <mesh position={[xSign * halfW, 0, 0]} rotation={[0, xSign > 0 ? -Math.PI / 2 : Math.PI / 2, 0]}>
       <shapeGeometry args={[sideShape]} />
-      <meshStandardMaterial color={VW.candyWhite} side={THREE.DoubleSide} metalness={0.3} roughness={0.5} />
+      <meshStandardMaterial color={paintColor} side={THREE.DoubleSide} metalness={0.3} roughness={0.5} />
     </mesh>
   );
 }
@@ -72,7 +72,7 @@ function WheelArch({ position, radius }) {
   );
 }
 
-function CharacterLine({ side }) {
+function CharacterLine({ side, paintColor }) {
   const xSign = side === 'left' ? 1 : -1;
   const halfW = VW.bodyWidth / 2 + 0.002;
   const L = VW.length;
@@ -91,7 +91,7 @@ function CharacterLine({ side }) {
 
   return (
     <mesh geometry={tubeGeo}>
-      <meshStandardMaterial color={VW.candyWhite} metalness={0.4} roughness={0.4} />
+      <meshStandardMaterial color={paintColor} metalness={0.4} roughness={0.4} />
     </mesh>
   );
 }
@@ -116,7 +116,7 @@ function DoorHandle({ position, side }) {
   );
 }
 
-function MainBodyShell() {
+function MainBodyShell({ paintColor }) {
   const bodyGeo = useMemo(() => {
     const shape = createBodyShape();
 
@@ -139,7 +139,7 @@ function MainBodyShell() {
   return (
     <mesh geometry={bodyGeo}>
       <meshStandardMaterial
-        color={VW.candyWhite}
+        color={paintColor}
         metalness={0.35}
         roughness={0.45}
         envMapIntensity={1.0}
@@ -148,14 +148,14 @@ function MainBodyShell() {
   );
 }
 
-function FrontBumper() {
+function FrontBumper({ paintColor }) {
   const halfL = VW.length / 2;
   return (
     <group>
       {/* Upper bumper */}
       <mesh position={[0, VW.groundClearance + 0.20, halfL - 0.02]}>
         <boxGeometry args={[VW.bodyWidth + 0.04, 0.18, 0.08]} />
-        <meshStandardMaterial color={VW.candyWhite} metalness={0.3} roughness={0.5} />
+        <meshStandardMaterial color={paintColor} metalness={0.3} roughness={0.5} />
       </mesh>
       {/* Lower bumper/air dam */}
       <mesh position={[0, VW.groundClearance + 0.06, halfL + 0.01]}>
@@ -178,14 +178,14 @@ function FrontBumper() {
   );
 }
 
-function RearBumper() {
+function RearBumper({ paintColor }) {
   const halfL = VW.length / 2;
   return (
     <group>
       {/* Upper bumper */}
       <mesh position={[0, VW.groundClearance + 0.22, -halfL + 0.02]}>
         <boxGeometry args={[VW.bodyWidth + 0.02, 0.20, 0.08]} />
-        <meshStandardMaterial color={VW.candyWhite} metalness={0.3} roughness={0.5} />
+        <meshStandardMaterial color={paintColor} metalness={0.3} roughness={0.5} />
       </mesh>
       {/* Lower bumper */}
       <mesh position={[0, VW.groundClearance + 0.06, -halfL - 0.01]}>
@@ -210,7 +210,7 @@ function RearBumper() {
   );
 }
 
-function Roof() {
+function Roof({ paintColor }) {
   const halfL = VW.length / 2;
   const roofFrontZ = halfL - 1.05;
   const roofRearZ = -halfL + 1.55;
@@ -221,20 +221,20 @@ function Roof() {
       {/* Main roof panel */}
       <mesh position={[0, VW.roofHeight + 0.01, (roofFrontZ + roofRearZ) / 2]}>
         <boxGeometry args={[VW.cabinWidth + 0.05, 0.025, roofLength + 0.1]} />
-        <meshStandardMaterial color={VW.candyWhite} metalness={0.3} roughness={0.5} />
+        <meshStandardMaterial color={paintColor} metalness={0.3} roughness={0.5} />
       </mesh>
       {/* Roof rails / subtle edges */}
       {[-1, 1].map(s => (
         <mesh key={`roof-edge-${s}`} position={[s * (VW.cabinWidth / 2 + 0.02), VW.roofHeight - 0.01, (roofFrontZ + roofRearZ) / 2]}>
           <boxGeometry args={[0.02, 0.03, roofLength]} />
-          <meshStandardMaterial color={VW.candyWhite} metalness={0.3} roughness={0.5} />
+          <meshStandardMaterial color={paintColor} metalness={0.3} roughness={0.5} />
         </mesh>
       ))}
     </group>
   );
 }
 
-function HoodPanel() {
+function HoodPanel({ paintColor }) {
   const halfL = VW.length / 2;
   const shape = useMemo(() => {
     const s = new THREE.Shape();
@@ -249,12 +249,12 @@ function HoodPanel() {
   return (
     <mesh position={[0, VW.hoodHeight + 0.02, halfL - 0.68]} rotation={[-Math.PI / 2 + 0.05, 0, 0]}>
       <shapeGeometry args={[shape]} />
-      <meshStandardMaterial color={VW.candyWhite} metalness={0.35} roughness={0.4} side={THREE.DoubleSide} />
+      <meshStandardMaterial color={paintColor} metalness={0.35} roughness={0.4} side={THREE.DoubleSide} />
     </mesh>
   );
 }
 
-function TrunkLid() {
+function TrunkLid({ paintColor }) {
   const halfL = VW.length / 2;
   const shape = useMemo(() => {
     const s = new THREE.Shape();
@@ -269,7 +269,7 @@ function TrunkLid() {
   return (
     <mesh position={[0, VW.trunkHeight + 0.02, -halfL + 0.55]} rotation={[-Math.PI / 2 - 0.03, 0, 0]}>
       <shapeGeometry args={[shape]} />
-      <meshStandardMaterial color={VW.candyWhite} metalness={0.35} roughness={0.4} side={THREE.DoubleSide} />
+      <meshStandardMaterial color={paintColor} metalness={0.35} roughness={0.4} side={THREE.DoubleSide} />
     </mesh>
   );
 }
@@ -283,7 +283,7 @@ function Underbody() {
   );
 }
 
-function SideMirror({ side }) {
+function SideMirror({ side, paintColor }) {
   const xSign = side === 'left' ? 1 : -1;
   const halfW = VW.bodyWidth / 2;
   const halfL = VW.length / 2;
@@ -293,12 +293,12 @@ function SideMirror({ side }) {
       {/* Mirror arm */}
       <mesh position={[xSign * -0.03, 0, 0]}>
         <boxGeometry args={[0.06, 0.02, 0.03]} />
-        <meshStandardMaterial color={VW.candyWhite} metalness={0.3} roughness={0.5} />
+        <meshStandardMaterial color={paintColor} metalness={0.3} roughness={0.5} />
       </mesh>
       {/* Mirror housing */}
       <mesh>
         <boxGeometry args={[0.03, 0.06, 0.10]} />
-        <meshStandardMaterial color={VW.candyWhite} metalness={0.3} roughness={0.5} />
+        <meshStandardMaterial color={paintColor} metalness={0.3} roughness={0.5} />
       </mesh>
       {/* Mirror glass */}
       <mesh position={[xSign * 0.016, 0, 0]}>
@@ -327,26 +327,26 @@ function ChromeGrilleBar() {
   );
 }
 
-export default function Body({ hoodAngle = 0, trunkAngle = 0, doorAngles = { fl: 0, fr: 0, rl: 0, rr: 0 } }) {
+export default function Body({ hoodAngle = 0, trunkAngle = 0, doorAngles = { fl: 0, fr: 0, rl: 0, rr: 0 }, paintColor = VW.candyWhite, onPartClick }) {
   const halfL = VW.length / 2;
   const halfW = VW.bodyWidth / 2;
 
   return (
-    <group>
-      <MainBodyShell />
-      <FrontBumper />
-      <RearBumper />
-      <Roof />
+    <group onClick={onPartClick ? (e) => { e.stopPropagation(); onPartClick('body'); } : undefined}>
+      <MainBodyShell paintColor={paintColor} />
+      <FrontBumper paintColor={paintColor} />
+      <RearBumper paintColor={paintColor} />
+      <Roof paintColor={paintColor} />
       <ChromeGrilleBar />
       <Underbody />
 
       {/* Side mirrors */}
-      <SideMirror side="left" />
-      <SideMirror side="right" />
+      <SideMirror side="left" paintColor={paintColor} />
+      <SideMirror side="right" paintColor={paintColor} />
 
       {/* Character lines */}
-      <CharacterLine side="left" />
-      <CharacterLine side="right" />
+      <CharacterLine side="left" paintColor={paintColor} />
+      <CharacterLine side="right" paintColor={paintColor} />
 
       {/* Door handles */}
       {/* Front doors */}
@@ -363,46 +363,49 @@ export default function Body({ hoodAngle = 0, trunkAngle = 0, doorAngles = { fl:
       <WheelArch position={[-halfW - 0.01, VW.tireRadius, AXLE_Z.rear]} radius={VW.tireRadius + 0.03} />
 
       {/* Animated Hood */}
-      <group position={[0, VW.hoodHeight + 0.02, halfL - 0.05]} rotation={[hoodAngle, 0, 0]}>
+      <group position={[0, VW.hoodHeight + 0.02, halfL - 0.05]} rotation={[hoodAngle, 0, 0]}
+        onClick={onPartClick ? (e) => { e.stopPropagation(); onPartClick('hood'); } : undefined}>
         <group position={[0, 0, -0.63]}>
-          <HoodPanel />
+          <HoodPanel paintColor={paintColor} />
         </group>
       </group>
 
       {/* Animated Trunk */}
-      <group position={[0, VW.trunkHeight + 0.02, -halfL + 0.10]} rotation={[-trunkAngle, 0, 0]}>
+      <group position={[0, VW.trunkHeight + 0.02, -halfL + 0.10]} rotation={[-trunkAngle, 0, 0]}
+        onClick={onPartClick ? (e) => { e.stopPropagation(); onPartClick('trunk'); } : undefined}>
         <group position={[0, 0, 0.45]}>
-          <TrunkLid />
+          <TrunkLid paintColor={paintColor} />
         </group>
       </group>
 
       {/* Door panels (animated) */}
       {/* Front Left Door */}
-      <group position={[halfW, 0, halfL - 0.90]} rotation={[0, doorAngles.fl, 0]}>
+      <group position={[halfW, 0, halfL - 0.90]} rotation={[0, doorAngles.fl, 0]}
+        onClick={onPartClick ? (e) => { e.stopPropagation(); onPartClick('doors'); } : undefined}>
         <mesh position={[0.005, VW.groundClearance + 0.35, -0.45]}>
           <boxGeometry args={[0.025, VW.doorHeight, VW.doorWidth]} />
-          <meshStandardMaterial color={VW.candyWhite} metalness={0.3} roughness={0.5} />
+          <meshStandardMaterial color={paintColor} metalness={0.3} roughness={0.5} />
         </mesh>
       </group>
       {/* Front Right Door */}
       <group position={[-halfW, 0, halfL - 0.90]} rotation={[0, -doorAngles.fr, 0]}>
         <mesh position={[-0.005, VW.groundClearance + 0.35, -0.45]}>
           <boxGeometry args={[0.025, VW.doorHeight, VW.doorWidth]} />
-          <meshStandardMaterial color={VW.candyWhite} metalness={0.3} roughness={0.5} />
+          <meshStandardMaterial color={paintColor} metalness={0.3} roughness={0.5} />
         </mesh>
       </group>
       {/* Rear Left Door */}
       <group position={[halfW, 0, halfL - 1.80]} rotation={[0, doorAngles.rl, 0]}>
         <mesh position={[0.005, VW.groundClearance + 0.35, -0.40]}>
           <boxGeometry args={[0.025, VW.doorHeight, VW.rearDoorWidth]} />
-          <meshStandardMaterial color={VW.candyWhite} metalness={0.3} roughness={0.5} />
+          <meshStandardMaterial color={paintColor} metalness={0.3} roughness={0.5} />
         </mesh>
       </group>
       {/* Rear Right Door */}
       <group position={[-halfW, 0, halfL - 1.80]} rotation={[0, -doorAngles.rr, 0]}>
         <mesh position={[-0.005, VW.groundClearance + 0.35, -0.40]}>
           <boxGeometry args={[0.025, VW.doorHeight, VW.rearDoorWidth]} />
-          <meshStandardMaterial color={VW.candyWhite} metalness={0.3} roughness={0.5} />
+          <meshStandardMaterial color={paintColor} metalness={0.3} roughness={0.5} />
         </mesh>
       </group>
     </group>

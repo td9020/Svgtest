@@ -13,6 +13,15 @@ const useAnimationStore = create((set, get) => ({
   explodedView: false,
   engineReveal: false,
 
+  // New toggle states
+  spokedWheels: false,    // false = forged alloy, true = classic Fuchs style
+  nightMode: false,
+  povCamera: false,       // driver POV
+  showCables: false,
+  selectedPart: null,
+  paintColor: '#c0c0c0', // GT Silver default
+  turnSignalBlink: false,
+
   // Continuous values
   wheelSpeed: 5,         // rad/s
   engineRPM: 3000,       // for piston animation speed
@@ -28,6 +37,8 @@ const useAnimationStore = create((set, get) => ({
   // Setters
   toggle: (key) => set((s) => ({ [key]: !s[key] })),
   setValue: (key, val) => set({ [key]: val }),
+  setPaintColor: (color) => set({ paintColor: color }),
+  selectPart: (part) => set((s) => ({ selectedPart: s.selectedPart === part ? null : part })),
 
   // Frame update
   tick: (delta) => {
@@ -47,9 +58,12 @@ const useAnimationStore = create((set, get) => ({
     const rpmFactor = s.engineRPM / 1000;
     updates.pistonOffset = s.pistonOffset + rpmFactor * delta * 8;
 
-    // Turn signal blink
+    // Turn signal blink (~1.5 Hz)
     if (s.turnSignals) {
+      updates.turnSignalBlink = Math.sin(Date.now() * 0.01) > 0;
       updates.turnSignalPhase = Math.sin(Date.now() * 0.008) > 0;
+    } else if (s.turnSignalBlink) {
+      updates.turnSignalBlink = false;
     }
 
     // Exploded view interpolation

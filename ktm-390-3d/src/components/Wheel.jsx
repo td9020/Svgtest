@@ -7,14 +7,16 @@ import { SPECS } from './dimensions'
 // Front: 110/70-17 tire, OD ~594mm -> radius 297mm
 // Rear: 150/60-17 tire, OD ~618mm -> radius 309mm
 // Front disc: 320mm, Rear disc: 230mm
-// 5-spoke star pattern alloy wheels (NOT wire spokes)
+// 5-spoke star pattern alloy wheels (default) or 36 wire spokes
 
-const SPOKE_COUNT = 5
+const WIRE_SPOKE_COUNT = 36
+const ALLOY_SPOKE_COUNT = 5
 
 export default function Wheel({
   position = [0, 0, 0],
   isRear = false,
   spinAngle = 0,
+  spoked = false,
 }) {
   const group = useRef()
 
@@ -24,6 +26,8 @@ export default function Wheel({
   const tubeRadius = (tireRadius - rimRadius) / 2 + tireWidth / 5
   const tireMidRadius = rimRadius + tubeRadius
   const hubRadius = 0.04
+  const spokeInner = hubRadius + 0.005
+  const spokeOuter = rimRadius - 0.012
   const discRadius = isRear
     ? SPECS.rearDiscDiameter / 2   // 0.115m
     : SPECS.frontDiscDiameter / 2  // 0.160m
@@ -39,13 +43,21 @@ export default function Wheel({
       {/* Rim - outer bead */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[rimRadius, 0.012, 16, 48]} />
-        <meshStandardMaterial color="#1a1a1a" roughness={0.2} metalness={0.8} />
+        <meshStandardMaterial
+          color={spoked ? '#c0c0c0' : '#1a1a1a'}
+          roughness={spoked ? 0.1 : 0.2}
+          metalness={spoked ? 0.9 : 0.8}
+        />
       </mesh>
 
       {/* Rim - inner bead */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[rimRadius - 0.025, 0.009, 12, 48]} />
-        <meshStandardMaterial color="#1a1a1a" roughness={0.25} metalness={0.75} />
+        <meshStandardMaterial
+          color={spoked ? '#c0c0c0' : '#1a1a1a'}
+          roughness={0.25}
+          metalness={0.75}
+        />
       </mesh>
 
       {/* Hub - central */}
@@ -68,47 +80,75 @@ export default function Wheel({
         <meshStandardMaterial color="#555" roughness={0.4} metalness={0.6} />
       </mesh>
 
-      {/* 5-spoke star alloy pattern - KTM signature */}
-      {Array.from({ length: SPOKE_COUNT }).map((_, i) => {
-        const angle = (i / SPOKE_COUNT) * Math.PI * 2
+      {/* === WIRE SPOKES (when spoked=true) === */}
+      {spoked && Array.from({ length: WIRE_SPOKE_COUNT }).map((_, i) => {
+        const angle = (i / WIRE_SPOKE_COUNT) * Math.PI * 2
+        const offset = (i % 2 === 0) ? 0.1 : -0.1
+        const innerAngle = angle + offset
+        const ix = Math.cos(innerAngle) * spokeInner
+        const iy = Math.sin(innerAngle) * spokeInner
+        const ox = Math.cos(angle) * spokeOuter
+        const oy = Math.sin(angle) * spokeOuter
+        const mx = (ix + ox) / 2
+        const my = (iy + oy) / 2
+        const len = Math.sqrt((ox - ix) ** 2 + (oy - iy) ** 2)
+        const rot = Math.atan2(oy - iy, ox - ix)
+        const zOff = (i % 2 === 0) ? 0.014 : -0.014
+
+        return (
+          <group key={i}>
+            {/* Wire spoke */}
+            <mesh position={[mx, my, zOff]} rotation={[0, 0, rot]}>
+              <cylinderGeometry args={[0.001, 0.001, len, 3]} />
+              <meshStandardMaterial color="#d0d0d0" roughness={0.1} metalness={0.9} />
+            </mesh>
+            {/* Spoke nipple at rim end */}
+            <mesh position={[ox, oy, zOff]}>
+              <sphereGeometry args={[0.002, 4, 4]} />
+              <meshStandardMaterial color="#c0c0c0" roughness={0.15} metalness={0.85} />
+            </mesh>
+          </group>
+        )
+      })}
+
+      {/* === ALLOY Y-SPOKES (when spoked=false) - KTM signature 5-spoke star === */}
+      {!spoked && Array.from({ length: ALLOY_SPOKE_COUNT }).map((_, i) => {
+        const angle = (i / ALLOY_SPOKE_COUNT) * Math.PI * 2
         // Each spoke is a Y-split - main spoke from hub to rim
-        const spokeInner = hubRadius + 0.01
-        const spokeOuter = rimRadius - 0.015
-        const mx = Math.cos(angle) * ((spokeInner + spokeOuter) / 2)
-        const my = Math.sin(angle) * ((spokeInner + spokeOuter) / 2)
-        const len = spokeOuter - spokeInner
+        const spokeInnerR = hubRadius + 0.01
+        const spokeOuterR = rimRadius - 0.015
         const rot = angle - Math.PI / 2
 
         // Split spoke into two arms near the rim
-        const splitStart = spokeOuter * 0.55
+        const splitStart = spokeOuterR * 0.55
         const splitAngleOffset = 0.18
 
         const arm1Angle = angle + splitAngleOffset
         const arm2Angle = angle - splitAngleOffset
-        const arm1mx = (Math.cos(angle) * splitStart + Math.cos(arm1Angle) * spokeOuter) / 2
-        const arm1my = (Math.sin(angle) * splitStart + Math.sin(arm1Angle) * spokeOuter) / 2
-        const arm2mx = (Math.cos(angle) * splitStart + Math.cos(arm2Angle) * spokeOuter) / 2
-        const arm2my = (Math.sin(angle) * splitStart + Math.sin(arm2Angle) * spokeOuter) / 2
+        const arm1mx = (Math.cos(angle) * splitStart + Math.cos(arm1Angle) * spokeOuterR) / 2
+        const arm1my = (Math.sin(angle) * splitStart + Math.sin(arm1Angle) * spokeOuterR) / 2
+        const arm2mx = (Math.cos(angle) * splitStart + Math.cos(arm2Angle) * spokeOuterR) / 2
+        const arm2my = (Math.sin(angle) * splitStart + Math.sin(arm2Angle) * spokeOuterR) / 2
 
-        const armLen = spokeOuter - splitStart + 0.02
+        const armLen = spokeOuterR - splitStart + 0.02
         const arm1rot = Math.atan2(
-          Math.sin(arm1Angle) * spokeOuter - Math.sin(angle) * splitStart,
-          Math.cos(arm1Angle) * spokeOuter - Math.cos(angle) * splitStart
+          Math.sin(arm1Angle) * spokeOuterR - Math.sin(angle) * splitStart,
+          Math.cos(arm1Angle) * spokeOuterR - Math.cos(angle) * splitStart
         )
         const arm2rot = Math.atan2(
-          Math.sin(arm2Angle) * spokeOuter - Math.sin(angle) * splitStart,
-          Math.cos(arm2Angle) * spokeOuter - Math.cos(angle) * splitStart
+          Math.sin(arm2Angle) * spokeOuterR - Math.sin(angle) * splitStart,
+          Math.cos(arm2Angle) * spokeOuterR - Math.cos(angle) * splitStart
         )
 
         return (
           <group key={i}>
             {/* Main spoke trunk - from hub to split point */}
             <mesh position={[
-              Math.cos(angle) * (spokeInner + splitStart) / 2,
-              Math.sin(angle) * (spokeInner + splitStart) / 2,
+              Math.cos(angle) * (spokeInnerR + splitStart) / 2,
+              Math.sin(angle) * (spokeInnerR + splitStart) / 2,
               0
             ]} rotation={[0, 0, rot]}>
-              <boxGeometry args={[0.022, splitStart - spokeInner, 0.014]} />
+              <boxGeometry args={[0.022, splitStart - spokeInnerR, 0.014]} />
               <meshStandardMaterial color="#1a1a1a" roughness={0.2} metalness={0.8} />
             </mesh>
 

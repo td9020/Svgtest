@@ -4,18 +4,20 @@ import { SPECS } from './dimensions'
 
 // Suzuki Hayabusa GSX1300R:
 // Both wheels: 17-inch alloy rims (431.8mm diameter)
-// Front: 120/70-17, OD ~620mm → radius 310mm
-// Rear: 190/50-17, OD ~632mm → radius 316mm (very wide!)
+// Front: 120/70-17, OD ~620mm -> radius 310mm
+// Rear: 190/50-17, OD ~632mm -> radius 316mm (very wide!)
 // Front: DUAL 320mm disc brakes, Brembo 4-piston radial calipers
 // Rear: 260mm single disc
-// 6-spoke alloy wheels
+// 6-spoke alloy wheels (default), optional wire spokes
 
-const SPOKE_COUNT = 6
+const WIRE_SPOKE_COUNT = 36
+const ALLOY_SPOKE_COUNT = 6
 
 export default function Wheel({
   position = [0, 0, 0],
   isRear = false,
   spinAngle = 0,
+  spoked = false,
 }) {
   const group = useRef()
 
@@ -28,6 +30,8 @@ export default function Wheel({
   const discRadius = isRear
     ? SPECS.rearDiscDiameter / 2    // 0.130m
     : SPECS.frontDiscDiameter / 2   // 0.160m
+  const spokeInner = hubRadius + 0.005
+  const spokeOuter = rimRadius - 0.015
 
   return (
     <group ref={group} position={position} rotation={[0, 0, spinAngle]}>
@@ -40,13 +44,21 @@ export default function Wheel({
       {/* Rim - outer bead */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[rimRadius, 0.012, 16, 48]} />
-        <meshStandardMaterial color="#b0b0b0" roughness={0.12} metalness={0.88} />
+        <meshStandardMaterial
+          color={spoked ? '#c0c0c0' : '#b0b0b0'}
+          roughness={spoked ? 0.1 : 0.12}
+          metalness={spoked ? 0.9 : 0.88}
+        />
       </mesh>
 
       {/* Rim - inner bead */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[rimRadius - 0.025, 0.009, 12, 48]} />
-        <meshStandardMaterial color="#b0b0b0" roughness={0.15} metalness={0.85} />
+        <meshStandardMaterial
+          color={spoked ? '#c0c0c0' : '#b0b0b0'}
+          roughness={0.15}
+          metalness={0.85}
+        />
       </mesh>
 
       {/* Hub - wider on Hayabusa */}
@@ -69,9 +81,40 @@ export default function Wheel({
         <meshStandardMaterial color="#555" roughness={0.4} metalness={0.6} />
       </mesh>
 
-      {/* 6-spoke alloy wheel design */}
-      {Array.from({ length: SPOKE_COUNT }).map((_, i) => {
-        const angle = (i / SPOKE_COUNT) * Math.PI * 2
+      {/* === WIRE SPOKED WHEELS === */}
+      {spoked && Array.from({ length: WIRE_SPOKE_COUNT }).map((_, i) => {
+        const angle = (i / WIRE_SPOKE_COUNT) * Math.PI * 2
+        const offset = (i % 2 === 0) ? 0.1 : -0.1
+        const innerAngle = angle + offset
+        const ix = Math.cos(innerAngle) * spokeInner
+        const iy = Math.sin(innerAngle) * spokeInner
+        const ox = Math.cos(angle) * spokeOuter
+        const oy = Math.sin(angle) * spokeOuter
+        const mx = (ix + ox) / 2
+        const my = (iy + oy) / 2
+        const len = Math.sqrt((ox - ix) ** 2 + (oy - iy) ** 2)
+        const rot = Math.atan2(oy - iy, ox - ix)
+        const zOff = (i % 2 === 0) ? 0.016 : -0.016
+
+        return (
+          <group key={i}>
+            {/* Wire spoke */}
+            <mesh position={[mx, my, zOff]} rotation={[0, 0, rot]}>
+              <cylinderGeometry args={[0.001, 0.001, len, 3]} />
+              <meshStandardMaterial color="#d0d0d0" roughness={0.1} metalness={0.9} />
+            </mesh>
+            {/* Spoke nipple at rim end */}
+            <mesh position={[ox, oy, zOff]}>
+              <sphereGeometry args={[0.002, 4, 4]} />
+              <meshStandardMaterial color="#c0c0c0" roughness={0.15} metalness={0.85} />
+            </mesh>
+          </group>
+        )
+      })}
+
+      {/* === 6-SPOKE ALLOY WHEEL (Hayabusa style) === */}
+      {!spoked && Array.from({ length: ALLOY_SPOKE_COUNT }).map((_, i) => {
+        const angle = (i / ALLOY_SPOKE_COUNT) * Math.PI * 2
         const innerR = hubRadius + 0.005
         const outerR = rimRadius - 0.015
         const midR = (innerR + outerR) / 2

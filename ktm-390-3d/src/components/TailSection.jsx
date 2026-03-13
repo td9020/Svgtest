@@ -1,7 +1,6 @@
-import { useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
 import * as THREE from 'three'
-import { SPECS, POS } from './dimensions'
+import { SPECS } from './dimensions'
 
 // KTM 390 Duke: Rear section
 // LED tail light strip
@@ -9,17 +8,14 @@ import { SPECS, POS } from './dimensions'
 // License plate on swingarm-mounted bracket
 // Monoshock suspension
 
-export default function TailSection({ position = [0, 0, 0], turnSignalsOn = false, headlightOn = true }) {
+export default function TailSection({
+  position = [0, 0, 0],
+  turnSignalsOn = false,
+  headlightOn = true,
+  blinkOn = false,
+  paintColor = '#FF6600',
+}) {
   const group = useRef()
-  const [blinkOn, setBlinkOn] = useState(false)
-
-  useFrame(() => {
-    if (turnSignalsOn) {
-      setBlinkOn(Math.sin(Date.now() * 0.01) > 0)
-    } else if (blinkOn) {
-      setBlinkOn(false)
-    }
-  })
 
   const rearTireR = SPECS.rearTireRadius
 
@@ -117,12 +113,12 @@ export default function TailSection({ position = [0, 0, 0], turnSignalsOn = fals
         {/* Spring (orange - KTM typical) */}
         <mesh rotation={[0, 0, 0.20]}>
           <cylinderGeometry args={[0.024, 0.024, 0.16, 8]} />
-          <meshStandardMaterial color="#FF6600" roughness={0.25} metalness={0.65} />
+          <meshStandardMaterial color={paintColor} roughness={0.25} metalness={0.65} />
         </mesh>
         {/* Preload adjuster */}
         <mesh position={[0.02, 0.10, 0]} rotation={[0, 0, 0.20]}>
           <cylinderGeometry args={[0.018, 0.018, 0.025, 12]} />
-          <meshStandardMaterial color="#FF6600" roughness={0.3} metalness={0.7} />
+          <meshStandardMaterial color={paintColor} roughness={0.3} metalness={0.7} />
         </mesh>
         {/* Reservoir */}
         <mesh position={[0.025, 0.05, 0.03]} rotation={[0, 0, 0.4]}>

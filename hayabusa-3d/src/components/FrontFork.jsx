@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
 import * as THREE from 'three'
 import { SPECS, POS } from './dimensions'
 
@@ -8,6 +7,7 @@ import { SPECS, POS } from './dimensions'
 // Integrated dual headlights in fairing
 // TFT instrument cluster
 // Aerodynamic mirrors integrated into fairing
+// blinkOn and paintColor props from parent (no internal blink state)
 
 export default function FrontFork({
   position = [0, 0, 0],
@@ -15,20 +15,13 @@ export default function FrontFork({
   steeringAngle = 0,
   headlightOn = true,
   turnSignalsOn = false,
+  blinkOn = false,
+  paintColor = '#003DA5',
 }) {
   const group = useRef()
-  const [blinkOn, setBlinkOn] = useState(false)
-
-  useFrame(() => {
-    if (turnSignalsOn) {
-      setBlinkOn(Math.sin(Date.now() * 0.01) > 0)
-    } else if (blinkOn) {
-      setBlinkOn(false)
-    }
-  })
 
   const forkAngle = 0.42  // ~24 degrees rake (sportier)
-  const forkTubeOD = SPECS.forkDiameter / 2  // 43mm USD forks → 21.5mm radius
+  const forkTubeOD = SPECS.forkDiameter / 2  // 43mm USD forks -> 21.5mm radius
   const forkSpacing = 0.075 // wider spacing for dual disc setup
 
   return (
@@ -89,7 +82,7 @@ export default function FrontFork({
         {/* Front fender - color matched */}
         <mesh position={[0.02, -0.12, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[SPECS.frontTireRadius - 0.01, SPECS.frontTireRadius - 0.01, 0.10, 16, 1, true, -0.8, 1.6]} />
-          <meshStandardMaterial color="#003DA5" roughness={0.20} metalness={0.30} side={THREE.DoubleSide} />
+          <meshStandardMaterial color={paintColor} roughness={0.20} metalness={0.30} side={THREE.DoubleSide} />
         </mesh>
 
         {/* Fender stays */}

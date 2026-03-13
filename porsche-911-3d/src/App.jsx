@@ -1,13 +1,173 @@
-import React from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment } from '@react-three/drei';
+import React, { Suspense, useRef } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { OrbitControls, Environment, ContactShadows, MeshReflectorMaterial } from '@react-three/drei';
 import Car from './components/Car';
 import AnimationControls from './components/AnimationControls';
+import Tachometer from './components/Tachometer';
+import useAnimationStore from './store/animationStore';
 import './App.css';
 
-export default function App() {
+// Camera controller for POV mode
+function CameraController() {
+  const { camera } = useThree();
+  const controlsRef = useRef();
+  const { povCamera, steeringAngle } = useAnimationStore();
+  const prevPov = useRef(false);
+
+  useFrame(() => {
+    if (povCamera && !prevPov.current) {
+      // Switch to POV: driver seat position in a 911
+      camera.position.set(0.4, 0.65, 0.35);
+      camera.lookAt(2.5, 0.60, 0.35);
+      if (controlsRef.current) controlsRef.current.enabled = false;
+    } else if (!povCamera && prevPov.current) {
+      // Switch back to orbit view
+      camera.position.set(5, 2, 5);
+      if (controlsRef.current) controlsRef.current.enabled = true;
+    }
+    prevPov.current = povCamera;
+
+    if (povCamera) {
+      // Subtle head movement with steering
+      camera.position.set(0.4, 0.65, 0.35 + steeringAngle * 0.03);
+      camera.lookAt(2.5 + steeringAngle * 0.2, 0.60, 0.35 + steeringAngle * 0.15);
+    }
+  });
+
   return (
-    <div style={{ width: '100vw', height: '100vh', background: '#0a0a0a' }}>
+    <OrbitControls
+      ref={controlsRef}
+      makeDefault
+      target={[0, 0.6, 0]}
+      maxPolarAngle={Math.PI / 2 - 0.05}
+      minDistance={2}
+      maxDistance={15}
+      enableDamping
+      dampingFactor={0.05}
+      enabled={!povCamera}
+    />
+  );
+}
+
+// Lighting setup that responds to day/night mode
+function SceneLighting() {
+  const { nightMode, headlightsOn } = useAnimationStore();
+
+  if (nightMode) {
+    return (
+      <>
+        <ambientLight intensity={0.05} color="#112244" />
+        <directionalLight position={[5, 5, 5]} intensity={0.1} color="#334466" />
+        <pointLight position={[0, 3, 0]} intensity={0.08} color="#223355" />
+        {/* Moon-like light */}
+        <directionalLight position={[-3, 8, -3]} intensity={0.15} color="#8899cc" />
+        {/* Dramatic spotlight from above */}
+        <spotLight
+          position={[0, 6, 0]}
+          intensity={0.5}
+          angle={0.4}
+          penumbra={0.8}
+          color="#334466"
+          distance={12}
+          castShadow
+        />
+        {/* Headlight beams - strong when headlights are on */}
+        {headlightsOn && (
+          <>
+            <spotLight
+              position={[2.15, 0.80, 0.55]}
+              target-position={[6, 0.3, 0.55]}
+              intensity={3}
+              angle={0.4}
+              penumbra={0.5}
+              color="#FFFFDD"
+              distance={8}
+              castShadow
+            />
+            <spotLight
+              position={[2.15, 0.80, -0.55]}
+              target-position={[6, 0.3, -0.55]}
+              intensity={3}
+              angle={0.4}
+              penumbra={0.5}
+              color="#FFFFDD"
+              distance={8}
+              castShadow
+            />
+          </>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <ambientLight intensity={0.3} />
+      <directionalLight
+        position={[5, 8, 5]}
+        intensity={1.2}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-far={20}
+        shadow-camera-left={-5}
+        shadow-camera-right={5}
+        shadow-camera-top={5}
+        shadow-camera-bottom={-5}
+      />
+      <directionalLight position={[-4, 4, -3]} intensity={0.4} color="#aaccff" />
+      <pointLight position={[0, 3, 0]} intensity={0.3} color="#ffffff" />
+    </>
+  );
+}
+
+// Ground with reflective material
+function Ground() {
+  const { nightMode } = useAnimationStore();
+
+  return (
+    <>
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0, 0]}
+        receiveShadow
+      >
+        <planeGeometry args={[30, 30]} />
+        <MeshReflectorMaterial
+          blur={[300, 100]}
+          resolution={1024}
+          mixBlur={1}
+          mixStrength={nightMode ? 0.8 : 0.3}
+          roughness={0.7}
+          depthScale={1.2}
+          minDepthThreshold={0.4}
+          maxDepthThreshold={1.4}
+          color={nightMode ? '#0a0a12' : '#111111'}
+          metalness={0.2}
+          mirror={0}
+        />
+      </mesh>
+
+      <ContactShadows
+        position={[0, 0.005, 0]}
+        opacity={nightMode ? 0.3 : 0.55}
+        scale={8}
+        blur={2.5}
+        far={3}
+      />
+
+      <gridHelper
+        args={[20, 40, nightMode ? '#181828' : '#222222', nightMode ? '#111118' : '#181818']}
+        position={[0, 0.001, 0]}
+      />
+    </>
+  );
+}
+
+export default function App() {
+  const { nightMode } = useAnimationStore();
+
+  return (
+    <div style={{ width: '100vw', height: '100vh', background: nightMode ? '#050510' : '#0a0a0a' }}>
       {/* Title */}
       <div
         style={{
@@ -16,6 +176,7 @@ export default function App() {
           left: 20,
           zIndex: 100,
           fontFamily: 'monospace',
+          pointerEvents: 'none',
         }}
       >
         <h1
@@ -39,66 +200,42 @@ export default function App() {
         >
           4.0L FLAT-6 | 502 HP @ 8400 RPM | 9000 RPM REDLINE
         </p>
+        <p
+          style={{
+            color: '#555',
+            fontSize: '9px',
+            margin: '3px 0 0 0',
+          }}
+        >
+          Drag to rotate &bull; Scroll to zoom &bull; Click parts for info
+        </p>
       </div>
 
+      {/* Tachometer HUD */}
+      <Tachometer />
+
       <Canvas
-        camera={{ position: [5, 2, 5], fov: 32 }}
+        camera={{ position: [5, 2, 5], fov: 32, near: 0.01, far: 100 }}
         shadows
-        gl={{ antialias: true, toneMapping: 3 }}
+        gl={{ antialias: true, alpha: false, toneMapping: 3 }}
       >
-        <color attach="background" args={['#0a0a0a']} />
-        <fog attach="fog" args={['#0a0a0a', 8, 25]} />
+        <Suspense fallback={null}>
+          <color attach="background" args={[nightMode ? '#050510' : '#0a0a0a']} />
+          <fog attach="fog" args={[nightMode ? '#050510' : '#0a0a0a', 8, 25]} />
 
-        {/* Lighting */}
-        <ambientLight intensity={0.3} />
-        <directionalLight
-          position={[5, 8, 5]}
-          intensity={1.2}
-          castShadow
-          shadow-mapSize={[2048, 2048]}
-          shadow-camera-far={20}
-          shadow-camera-left={-5}
-          shadow-camera-right={5}
-          shadow-camera-top={5}
-          shadow-camera-bottom={-5}
-        />
-        <directionalLight position={[-4, 4, -3]} intensity={0.4} color="#aaccff" />
-        <pointLight position={[0, 3, 0]} intensity={0.3} color="#ffffff" />
+          <SceneLighting />
 
-        {/* Environment for reflections */}
-        <Environment preset="city" />
+          {/* Environment for reflections */}
+          <Environment preset={nightMode ? 'night' : 'city'} />
 
-        {/* Ground plane */}
-        <mesh
-          rotation={[-Math.PI / 2, 0, 0]}
-          position={[0, 0, 0]}
-          receiveShadow
-        >
-          <planeGeometry args={[30, 30]} />
-          <meshStandardMaterial
-            color="#111111"
-            metalness={0.2}
-            roughness={0.8}
-          />
-        </mesh>
+          {/* Ground */}
+          <Ground />
 
-        {/* Ground grid */}
-        <gridHelper
-          args={[20, 40, '#222222', '#181818']}
-          position={[0, 0.001, 0]}
-        />
+          {/* The Car */}
+          <Car />
 
-        {/* The Car */}
-        <Car />
-
-        <OrbitControls
-          target={[0, 0.6, 0]}
-          maxPolarAngle={Math.PI / 2 - 0.05}
-          minDistance={2}
-          maxDistance={15}
-          enableDamping
-          dampingFactor={0.05}
-        />
+          <CameraController />
+        </Suspense>
       </Canvas>
 
       <AnimationControls />

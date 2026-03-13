@@ -12,6 +12,7 @@ import Engine from './Engine';
 import Exhaust from './Exhaust';
 import Suspension from './Suspension';
 import Wheel from './Wheel';
+import Cables from './Cables';
 
 function lerp(a, b, t) {
   return a + (b - a) * Math.min(t, 1);
@@ -25,7 +26,6 @@ export default function Car() {
   const hoodRef = useRef(0);
   const trunkRef = useRef(0);
   const pistonRef = useRef(0);
-  const blinkRef = useRef(0);
   const explodeRef = useRef(0);
 
   useFrame((_, delta) => {
@@ -63,18 +63,13 @@ export default function Car() {
     }
     store.setPistonOffset(pistonRef.current);
 
-    // Turn signal blink
-    if (store.turnSignals) {
-      blinkRef.current += d;
-      store.setTurnSignalBlink(Math.sin(blinkRef.current * 6) > 0);
-    } else {
-      store.setTurnSignalBlink(false);
-    }
-
     // Exploded view
     const explodeTarget = store.explodedView ? 1.0 : 0;
     explodeRef.current = lerp(explodeRef.current, explodeTarget, d * 2);
     store.setExplodeOffset(explodeRef.current);
+
+    // Tick for turn signal blink
+    store.tick(d);
   });
 
   const eOff = store.explodeOffset;
@@ -85,6 +80,10 @@ export default function Car() {
     rr: store.doorAngle * 0.85,
   };
 
+  const handlePartClick = (part) => {
+    store.selectPart(part);
+  };
+
   return (
     <group>
       {/* Body shell */}
@@ -93,6 +92,8 @@ export default function Car() {
           hoodAngle={store.hoodAngle}
           trunkAngle={store.trunkAngle}
           doorAngles={doorAngles}
+          paintColor={store.paintColor}
+          onPartClick={handlePartClick}
         />
       </group>
 
@@ -107,7 +108,8 @@ export default function Car() {
       </group>
 
       {/* Headlights */}
-      <group position={[0, eOff * 0.2, eOff * 0.3]}>
+      <group position={[0, eOff * 0.2, eOff * 0.3]}
+        onClick={(e) => { e.stopPropagation(); handlePartClick('headlights'); }}>
         <Headlights headlightOn={store.headlightsOn} />
       </group>
 
@@ -120,17 +122,27 @@ export default function Car() {
       </group>
 
       {/* Engine */}
-      <group position={[0, eOff * 0.5, eOff * 0.5]}>
+      <group position={[0, eOff * 0.5, eOff * 0.5]}
+        onClick={(e) => { e.stopPropagation(); handlePartClick('engine'); }}>
         <Engine pistonOffset={store.pistonOffset} />
       </group>
 
+      {/* Cables (under-hood wiring) */}
+      {store.showCables && (
+        <group position={[0, eOff * 0.5, eOff * 0.5]}>
+          <Cables />
+        </group>
+      )}
+
       {/* Exhaust */}
-      <group position={[eOff * 0.3, -eOff * 0.2, 0]}>
+      <group position={[eOff * 0.3, -eOff * 0.2, 0]}
+        onClick={(e) => { e.stopPropagation(); handlePartClick('exhaust'); }}>
         <Exhaust />
       </group>
 
       {/* Suspension */}
-      <group position={[0, -eOff * 0.2, 0]}>
+      <group position={[0, -eOff * 0.2, 0]}
+        onClick={(e) => { e.stopPropagation(); handlePartClick('suspension'); }}>
         <Suspension />
       </group>
 
@@ -143,12 +155,14 @@ export default function Car() {
             w.pos[1] - eOff * 0.1,
             w.pos[2] + (w.isFront ? eOff * 0.2 : -eOff * 0.2),
           ]}
+          onClick={(e) => { e.stopPropagation(); handlePartClick(w.isFront ? 'frontWheel' : 'rearWheel'); }}
         >
           <Wheel
             spinAngle={store.spinAngle}
             steerAngle={w.isFront ? store.steerAngle : 0}
             isFront={w.isFront}
             side={w.side}
+            spoked={store.spokedWheels}
           />
         </group>
       ))}

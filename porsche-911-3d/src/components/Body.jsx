@@ -3,15 +3,6 @@ import * as THREE from 'three';
 import { D } from './dimensions';
 import { useCSG } from './CSGMesh';
 
-// Guards Red paint material
-const bodyMat = new THREE.MeshStandardMaterial({
-  color: '#CC0000',
-  metalness: 0.4,
-  roughness: 0.25,
-  clearcoat: 1.0,
-  clearcoatRoughness: 0.1,
-});
-
 const blackMat = new THREE.MeshStandardMaterial({
   color: '#111111',
   metalness: 0.3,
@@ -29,9 +20,6 @@ function createBodyProfile() {
   const halfW = D.bodyWidth / 2;
   const halfL = D.length / 2;
   const gc = D.groundClearance;
-
-  // Build the 911 silhouette as a series of cross-section shapes extruded along length
-  // We'll use a custom approach: build the main body as a shaped box with curved top
 
   const shape = new THREE.Shape();
 
@@ -55,7 +43,7 @@ function createBodyProfile() {
   const roofPeak = wsBase - 0.65;
   shape.lineTo(roofPeak, D.roofHeight);
 
-  // THE ICONIC 911 SLOPING ROOFLINE - flows smoothly into the wide rear
+  // THE ICONIC 911 SLOPING ROOFLINE
   const rearWindowStart = roofPeak - 0.1;
   shape.quadraticCurveTo(
     rearWindowStart - 0.4, D.roofHeight - 0.05,
@@ -80,16 +68,10 @@ function createBodyProfile() {
   return shape;
 }
 
-export default function Body({ opacity = 1, doorsOpen = false, hoodOpen = false }) {
+export default function Body({ opacity = 1, doorsOpen = false, hoodOpen = false, paintColor = '#c0c0c0' }) {
   const isTransparent = opacity < 1;
 
   const mainBodyGeo = useMemo(() => {
-    const halfW = D.bodyWidth / 2;
-    const halfL = D.length / 2;
-    const gc = D.groundClearance;
-    const rearHalfW = D.rearHaunchWidth / 2;
-
-    // Main body shell as an extruded shape
     const shape = createBodyProfile();
 
     const extrudeSettings = {
@@ -103,12 +85,19 @@ export default function Body({ opacity = 1, doorsOpen = false, hoodOpen = false 
 
     const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     geo.translate(0, 0, -D.bodyWidth / 2);
-    // Rotate to align: extruded shape is in XY plane, we need XZ for width
     geo.rotateX(-Math.PI / 2);
-    // Now the shape profile is in XY (side view), extruded along Z (width)
 
     return geo;
   }, []);
+
+  // Create body material for CSG
+  const bodyMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: paintColor,
+    metalness: 0.4,
+    roughness: 0.25,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.1,
+  }), [paintColor]);
 
   // Wheel arch cutouts
   const wheelArchGeo = useCSG(
@@ -116,7 +105,7 @@ export default function Body({ opacity = 1, doorsOpen = false, hoodOpen = false 
       geometry: mainBodyGeo,
       material: isTransparent
         ? new THREE.MeshStandardMaterial({
-            color: '#CC0000',
+            color: paintColor,
             metalness: 0.4,
             roughness: 0.25,
             transparent: true,
@@ -194,7 +183,7 @@ export default function Body({ opacity = 1, doorsOpen = false, hoodOpen = false 
       <mesh geometry={wheelArchGeo}>
         {isTransparent ? (
           <meshStandardMaterial
-            color="#CC0000"
+            color={paintColor}
             metalness={0.4}
             roughness={0.25}
             transparent
@@ -202,7 +191,7 @@ export default function Body({ opacity = 1, doorsOpen = false, hoodOpen = false 
           />
         ) : (
           <meshPhysicalMaterial
-            color="#CC0000"
+            color={paintColor}
             metalness={0.4}
             roughness={0.2}
             clearcoat={1.0}
@@ -215,17 +204,17 @@ export default function Body({ opacity = 1, doorsOpen = false, hoodOpen = false 
       <mesh position={[D.rearAxleX, D.rearWheelY + 0.15, D.rearWheelZ + 0.03]}>
         <sphereGeometry args={[0.42, 16, 12, 0, Math.PI, 0, Math.PI / 2]} />
         {isTransparent ? (
-          <meshStandardMaterial color="#CC0000" transparent opacity={opacity} />
+          <meshStandardMaterial color={paintColor} transparent opacity={opacity} />
         ) : (
-          <meshPhysicalMaterial color="#CC0000" metalness={0.4} roughness={0.2} clearcoat={1} />
+          <meshPhysicalMaterial color={paintColor} metalness={0.4} roughness={0.2} clearcoat={1} />
         )}
       </mesh>
       <mesh position={[D.rearAxleX, D.rearWheelY + 0.15, -D.rearWheelZ - 0.03]}>
         <sphereGeometry args={[0.42, 16, 12, 0, Math.PI, 0, Math.PI / 2]} />
         {isTransparent ? (
-          <meshStandardMaterial color="#CC0000" transparent opacity={opacity} />
+          <meshStandardMaterial color={paintColor} transparent opacity={opacity} />
         ) : (
-          <meshPhysicalMaterial color="#CC0000" metalness={0.4} roughness={0.2} clearcoat={1} />
+          <meshPhysicalMaterial color={paintColor} metalness={0.4} roughness={0.2} clearcoat={1} />
         )}
       </mesh>
 
@@ -311,7 +300,11 @@ export default function Body({ opacity = 1, doorsOpen = false, hoodOpen = false 
           position={[0.55, D.beltlineHeight - 0.03, side * (D.bodyWidth / 2 + 0.02)]}
         >
           <boxGeometry args={[0.1, 0.015, 0.012]} />
-          <meshStandardMaterial color="#AA0000" metalness={0.5} roughness={0.3} />
+          {isTransparent ? (
+            <meshStandardMaterial color={paintColor} transparent opacity={opacity} metalness={0.5} roughness={0.3} />
+          ) : (
+            <meshPhysicalMaterial color={paintColor} metalness={0.5} roughness={0.3} clearcoat={1} />
+          )}
         </mesh>
       ))}
 
@@ -321,9 +314,9 @@ export default function Body({ opacity = 1, doorsOpen = false, hoodOpen = false 
           <mesh>
             <boxGeometry args={[0.1, 0.05, 0.06]} />
             {isTransparent ? (
-              <meshStandardMaterial color="#CC0000" transparent opacity={opacity} />
+              <meshStandardMaterial color={paintColor} transparent opacity={opacity} />
             ) : (
-              <meshPhysicalMaterial color="#CC0000" metalness={0.4} roughness={0.2} clearcoat={1} />
+              <meshPhysicalMaterial color={paintColor} metalness={0.4} roughness={0.2} clearcoat={1} />
             )}
           </mesh>
           {/* Mirror glass */}
@@ -337,7 +330,11 @@ export default function Body({ opacity = 1, doorsOpen = false, hoodOpen = false 
       {/* Frunk (front trunk) lid lines */}
       <mesh position={[halfL - 0.6, D.hoodHeight + 0.01, 0]}>
         <boxGeometry args={[0.8, 0.003, D.bodyWidth * 0.7]} />
-        <meshStandardMaterial color="#990000" />
+        {isTransparent ? (
+          <meshStandardMaterial color={paintColor} transparent opacity={opacity} />
+        ) : (
+          <meshPhysicalMaterial color={paintColor} metalness={0.3} roughness={0.3} clearcoat={0.8} />
+        )}
       </mesh>
     </group>
   );

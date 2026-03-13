@@ -5,11 +5,9 @@ import { useMultiCSG } from './CSGMesh'
 
 // Suzuki Hayabusa GSX1300R: Large 20-litre fuel tank
 // Aerodynamic, smooth flowing shape integrated with bodywork
-// Suzuki blue (#003DA5) with silver accents
+// paintColor prop replaces hardcoded Suzuki blue
 
-const SUZUKI_BLUE = '#003DA5'
-
-export default function FuelTank({ position = [0, 0, 0] }) {
+export default function FuelTank({ position = [0, 0, 0], paintColor = '#003DA5' }) {
   const group = useRef()
 
   // CSG: Tank body with knee cutouts and filler hole
@@ -61,7 +59,7 @@ export default function FuelTank({ position = [0, 0, 0] }) {
       {/* Tank body (CSG: with knee cutouts and filler hole) */}
       <mesh geometry={tankCSG} scale={[1, 1, 0.80]}>
         <meshStandardMaterial
-          color={SUZUKI_BLUE}
+          color={paintColor}
           roughness={0.10}
           metalness={0.40}
           clearcoat={1.0}

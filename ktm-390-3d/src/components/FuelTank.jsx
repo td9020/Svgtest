@@ -8,9 +8,7 @@ import { useMultiCSG } from './CSGMesh'
 // Orange (#FF6600) with black side panels
 // Aggressive forward-leaning shape
 
-const KTM_ORANGE = '#FF6600'
-
-export default function FuelTank({ position = [0, 0, 0] }) {
+export default function FuelTank({ position = [0, 0, 0], paintColor = '#FF6600' }) {
   const group = useRef()
 
   // Angular tank shape using ExtrudeGeometry for sharp KTM look
@@ -70,7 +68,7 @@ export default function FuelTank({ position = [0, 0, 0] }) {
       {/* Tank body (CSG: with knee cutouts and filler hole) */}
       <mesh geometry={tankCSG} position={[0, 0, -SPECS.tankWidth * 0.375]}>
         <meshStandardMaterial
-          color={KTM_ORANGE}
+          color={paintColor}
           roughness={0.1}
           metalness={0.5}
           clearcoat={1.0}
@@ -94,7 +92,7 @@ export default function FuelTank({ position = [0, 0, 0] }) {
       {/* Tank shroud extensions - forward */}
       <mesh position={[SPECS.tankLength / 2 + 0.02, -0.02, 0]} rotation={[0, 0, 0.15]}>
         <boxGeometry args={[0.06, SPECS.tankHeight * 0.4, SPECS.tankWidth * 0.6]} />
-        <meshStandardMaterial color={KTM_ORANGE} roughness={0.12} metalness={0.45} />
+        <meshStandardMaterial color={paintColor} roughness={0.12} metalness={0.45} />
       </mesh>
 
       {/* Fuel cap */}

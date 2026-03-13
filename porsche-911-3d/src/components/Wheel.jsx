@@ -76,8 +76,8 @@ function BrakeDisc({ diameter, thickness }) {
   );
 }
 
-// Spoke wheel
-function WheelRim({ rimRadius, tireWidth }) {
+// 10-spoke forged alloy wheel (default)
+function ForgedRim({ rimRadius, tireWidth }) {
   const spokeCount = 10;
   const hubRadius = rimRadius * 0.2;
   const rimWidth = tireWidth * 0.75;
@@ -124,6 +124,85 @@ function WheelRim({ rimRadius, tireWidth }) {
   );
 }
 
+// Classic 5-spoke Fuchs-style wheel (wider spokes, more organic)
+function FuchsRim({ rimRadius, tireWidth }) {
+  const spokeCount = 5;
+  const hubRadius = rimRadius * 0.22;
+  const rimWidth = tireWidth * 0.75;
+
+  return (
+    <group>
+      {/* Outer rim barrel - polished lip */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[rimRadius * 0.92, 0.018, 12, 48]} />
+        <meshStandardMaterial color="#E0E0E0" metalness={0.95} roughness={0.03} />
+      </mesh>
+      {/* Inner rim */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[rimRadius * 0.84, 0.010, 8, 48]} />
+        <meshStandardMaterial color="#888888" metalness={0.85} roughness={0.1} />
+      </mesh>
+      {/* Hub - larger for Fuchs */}
+      <mesh>
+        <cylinderGeometry args={[hubRadius, hubRadius, rimWidth * 0.35, 32]} />
+        <meshStandardMaterial color="#333333" metalness={0.7} roughness={0.2} />
+      </mesh>
+      {/* Fuchs-style wide spokes - organic clover-leaf shape */}
+      {Array.from({ length: spokeCount }, (_, i) => {
+        const angle = (i / spokeCount) * Math.PI * 2;
+        const spokeLen = rimRadius * 0.70;
+        return (
+          <group key={i}>
+            {/* Main wide spoke */}
+            <mesh
+              position={[
+                Math.cos(angle) * spokeLen * 0.45,
+                0.003,
+                Math.sin(angle) * spokeLen * 0.45,
+              ]}
+              rotation={[0, -angle + Math.PI / 2, 0]}
+            >
+              <boxGeometry args={[spokeLen, 0.015, 0.065]} />
+              <meshStandardMaterial color="#333333" metalness={0.6} roughness={0.3} />
+            </mesh>
+            {/* Spoke taper at outer end */}
+            <mesh
+              position={[
+                Math.cos(angle) * spokeLen * 0.8,
+                0.003,
+                Math.sin(angle) * spokeLen * 0.8,
+              ]}
+              rotation={[0, -angle + Math.PI / 2, 0]}
+            >
+              <boxGeometry args={[spokeLen * 0.25, 0.014, 0.045]} />
+              <meshStandardMaterial color="#333333" metalness={0.6} roughness={0.3} />
+            </mesh>
+            {/* Polished highlight edge on spoke */}
+            <mesh
+              position={[
+                Math.cos(angle) * spokeLen * 0.45,
+                0.012,
+                Math.sin(angle) * spokeLen * 0.45,
+              ]}
+              rotation={[0, -angle + Math.PI / 2, 0]}
+            >
+              <boxGeometry args={[spokeLen * 0.9, 0.003, 0.055]} />
+              <meshStandardMaterial color="#CCCCCC" metalness={0.9} roughness={0.05} />
+            </mesh>
+          </group>
+        );
+      })}
+      {/* Fuchs-style openings between spokes - anodized black */}
+      <mesh position={[0, -0.002, 0]}>
+        <cylinderGeometry args={[rimRadius * 0.82, rimRadius * 0.82, 0.008, 48]} />
+        <meshStandardMaterial color="#1a1a1a" metalness={0.3} roughness={0.5} />
+      </mesh>
+      {/* Center lock */}
+      <CenterLock />
+    </group>
+  );
+}
+
 // Tire
 function Tire({ outerRadius, innerRadius, width }) {
   return (
@@ -134,7 +213,7 @@ function Tire({ outerRadius, innerRadius, width }) {
   );
 }
 
-export default function Wheel({ isFront = true, side = 'left', spinAngle = 0, steerAngle = 0 }) {
+export default function Wheel({ isFront = true, side = 'left', spinAngle = 0, steerAngle = 0, spoked = false }) {
   const tire = isFront ? D.frontTire : D.rearTire;
   const brake = isFront ? D.frontBrake : D.rearBrake;
   const rimRadius = tire.rimDiameter / 2;
@@ -148,8 +227,12 @@ export default function Wheel({ isFront = true, side = 'left', spinAngle = 0, st
       <group rotation={[spinAngle, flipY, 0]}>
         {/* Tire */}
         <Tire outerRadius={tireOuterR} innerRadius={tireInnerR} width={tire.width} />
-        {/* Rim */}
-        <WheelRim rimRadius={rimRadius} tireWidth={tire.width} />
+        {/* Rim - forged or Fuchs */}
+        {spoked ? (
+          <FuchsRim rimRadius={rimRadius} tireWidth={tire.width} />
+        ) : (
+          <ForgedRim rimRadius={rimRadius} tireWidth={tire.width} />
+        )}
       </group>
       {/* Brake disc (doesn't spin with wheel visually for simplicity) */}
       <BrakeDisc diameter={brake.diameter} thickness={brake.thickness} />

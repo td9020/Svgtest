@@ -1,13 +1,143 @@
-import { Suspense } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
+import { Suspense, useRef } from 'react'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
+import { OrbitControls, Environment, ContactShadows, MeshReflectorMaterial } from '@react-three/drei'
 import Motorcycle from './components/Motorcycle'
 import AnimationControls from './components/AnimationControls'
+import Tachometer from './components/Tachometer'
+import useAnimationStore from './store/animationStore'
 import './App.css'
 
-function App() {
+// Camera controller for POV mode
+function CameraController() {
+  const { camera } = useThree()
+  const controlsRef = useRef()
+  const { povCamera, steeringAngle } = useAnimationStore()
+  const prevPov = useRef(false)
+
+  useFrame(() => {
+    if (povCamera && !prevPov.current) {
+      // Switch to POV: rider position on the bike
+      camera.position.set(0.58, 1.05, 0)
+      camera.lookAt(1.5, 0.9, 0)
+      if (controlsRef.current) controlsRef.current.enabled = false
+    } else if (!povCamera && prevPov.current) {
+      // Switch back to orbit view
+      camera.position.set(1.8, 1.0, 1.8)
+      if (controlsRef.current) controlsRef.current.enabled = true
+    }
+    prevPov.current = povCamera
+
+    if (povCamera) {
+      // Subtle head movement with steering
+      camera.position.set(0.58, 1.05, steeringAngle * 0.05)
+      camera.lookAt(1.5 + steeringAngle * 0.3, 0.9, steeringAngle * 0.2)
+    }
+  })
+
   return (
-    <div style={{ width: '100vw', height: '100vh', background: '#12121e' }}>
+    <OrbitControls
+      ref={controlsRef}
+      makeDefault
+      minDistance={0.5}
+      maxDistance={6}
+      target={[0, 0.5, 0]}
+      enableDamping
+      dampingFactor={0.05}
+      enabled={!povCamera}
+    />
+  )
+}
+
+// Lighting setup that responds to day/night mode
+function SceneLighting() {
+  const { nightMode, headlightOn } = useAnimationStore()
+
+  if (nightMode) {
+    return (
+      <>
+        <ambientLight intensity={0.05} color="#112244" />
+        <directionalLight position={[5, 5, 5]} intensity={0.1} color="#334466" />
+        <pointLight position={[0, 3, 0]} intensity={0.08} color="#223355" />
+        {/* Moon-like light */}
+        <directionalLight position={[-3, 8, -3]} intensity={0.15} color="#8899cc" />
+        {/* Headlight beam - strong when headlight is on */}
+        {headlightOn && (
+          <spotLight
+            position={[0.59, 0.64, 0]}
+            target-position={[2.5, 0.2, 0]}
+            intensity={2.5}
+            angle={0.5}
+            penumbra={0.5}
+            color="#ffffdd"
+            distance={5}
+            castShadow
+          />
+        )}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <ambientLight intensity={0.35} />
+      <directionalLight
+        position={[5, 5, 5]}
+        intensity={1.3}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+      />
+      <directionalLight position={[-3, 4, -3]} intensity={0.5} />
+      <pointLight position={[0, 3, 0]} intensity={0.25} />
+      <pointLight position={[1.3, 0.5, 1]} intensity={0.15} color="#ffffee" />
+    </>
+  )
+}
+
+// Ground with reflection
+function Ground() {
+  const { nightMode } = useAnimationStore()
+
+  return (
+    <>
+      {/* Reflective ground plane */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+        <planeGeometry args={[12, 12]} />
+        <MeshReflectorMaterial
+          blur={[300, 100]}
+          resolution={1024}
+          mixBlur={1}
+          mixStrength={nightMode ? 0.8 : 0.3}
+          roughness={0.7}
+          depthScale={1.2}
+          minDepthThreshold={0.4}
+          maxDepthThreshold={1.4}
+          color={nightMode ? '#111122' : '#1a1a2a'}
+          metalness={0.15}
+          mirror={0}
+        />
+      </mesh>
+
+      <ContactShadows
+        position={[0, 0.005, 0]}
+        opacity={nightMode ? 0.3 : 0.55}
+        scale={5}
+        blur={2.5}
+        far={2}
+      />
+
+      <gridHelper
+        args={[6, 30, nightMode ? '#222244' : '#333355', nightMode ? '#1a1a33' : '#2a2a44']}
+        position={[0, 0.001, 0]}
+      />
+    </>
+  )
+}
+
+function App() {
+  const { nightMode } = useAnimationStore()
+
+  return (
+    <div style={{ width: '100vw', height: '100vh', background: nightMode ? '#0a0a12' : '#12121e' }}>
       {/* Title overlay */}
       <div style={{
         position: 'absolute',
@@ -36,7 +166,7 @@ function App() {
           margin: '4px 0 0 0',
           letterSpacing: '1px',
         }}>
-          Drag to rotate &bull; Scroll to zoom &bull; Right-click to pan
+          Drag to rotate &bull; Scroll to zoom &bull; Click parts for info
         </p>
         <p style={{
           color: '#666',
@@ -44,12 +174,15 @@ function App() {
           fontSize: '11px',
           margin: '4px 0 0 0',
         }}>
-          Built with real specs: 1367mm wheelbase &bull; 373.2cc &bull; 17&quot; alloy wheels &bull; Trellis frame &bull; CSG boolean geometry
+          373.2cc &bull; 1367mm wheelbase &bull; 17&quot; wheels &bull; Trellis frame &bull; {nightMode ? 'Night' : 'Day'} mode
         </p>
       </div>
 
       {/* Animation control panel */}
       <AnimationControls />
+
+      {/* Tachometer HUD */}
+      <Tachometer />
 
       <Canvas
         camera={{ position: [1.8, 1.0, 1.8], fov: 40, near: 0.01, far: 100 }}
@@ -57,51 +190,14 @@ function App() {
         gl={{ antialias: true, alpha: false }}
       >
         <Suspense fallback={null}>
-          {/* Lighting */}
-          <ambientLight intensity={0.35} />
-          <directionalLight
-            position={[5, 5, 5]}
-            intensity={1.3}
-            castShadow
-            shadow-mapSize={[2048, 2048]}
-          />
-          <directionalLight position={[-3, 4, -3]} intensity={0.5} />
-          <pointLight position={[0, 3, 0]} intensity={0.25} />
-          <pointLight position={[1.3, 0.5, 1]} intensity={0.15} color="#ffffee" />
-
-          {/* Environment for PBR reflections */}
-          <Environment preset="city" />
+          <SceneLighting />
+          <Environment preset={nightMode ? 'night' : 'city'} />
 
           {/* KTM 390 Duke - centered on wheelbase midpoint */}
           <Motorcycle position={[-0.684, 0, 0]} />
 
-          {/* Ground plane */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-            <planeGeometry args={[12, 12]} />
-            <meshStandardMaterial color="#1a1a2a" roughness={0.85} metalness={0.15} />
-          </mesh>
-
-          {/* Contact shadows */}
-          <ContactShadows
-            position={[0, 0.005, 0]}
-            opacity={0.55}
-            scale={5}
-            blur={2.5}
-            far={2}
-          />
-
-          {/* Grid */}
-          <gridHelper args={[6, 30, '#333355', '#2a2a44']} position={[0, 0.001, 0]} />
-
-          {/* Camera controls - target bike center */}
-          <OrbitControls
-            makeDefault
-            minDistance={0.5}
-            maxDistance={6}
-            target={[0, 0.5, 0]}
-            enableDamping
-            dampingFactor={0.05}
-          />
+          <Ground />
+          <CameraController />
         </Suspense>
       </Canvas>
     </div>

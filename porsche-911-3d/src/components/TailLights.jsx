@@ -1,7 +1,7 @@
 import React from 'react';
 import { D } from './dimensions';
 
-export default function TailLights({ brakeLightOn = false, turnSignalsOn = false }) {
+export default function TailLights({ brakeLightOn = false, turnSignalsOn = false, blinkOn = false }) {
   const halfL = D.length / 2;
   const y = D.roofHeight - 0.50;
   const x = -halfL + 0.03;

@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
 import * as THREE from 'three'
 import { SPECS, POS } from './dimensions'
 
@@ -8,20 +7,16 @@ import { SPECS, POS } from './dimensions'
 // Aerodynamic tail cowl
 // Short license plate bracket
 // Integrated turn signals
+// blinkOn and paintColor props from parent (no internal blink state)
 
-const SUZUKI_BLUE = '#003DA5'
-
-export default function TailSection({ position = [0, 0, 0], turnSignalsOn = false, headlightOn = true }) {
+export default function TailSection({
+  position = [0, 0, 0],
+  turnSignalsOn = false,
+  headlightOn = true,
+  blinkOn = false,
+  paintColor = '#003DA5',
+}) {
   const group = useRef()
-  const [blinkOn, setBlinkOn] = useState(false)
-
-  useFrame(() => {
-    if (turnSignalsOn) {
-      setBlinkOn(Math.sin(Date.now() * 0.01) > 0)
-    } else if (blinkOn) {
-      setBlinkOn(false)
-    }
-  })
 
   const rearTireR = SPECS.rearTireRadius
 
@@ -43,7 +38,7 @@ export default function TailSection({ position = [0, 0, 0], turnSignalsOn = fals
       <mesh position={[0.02, rearTireR + 0.16, 0]}>
         <boxGeometry args={[0.16, 0.065, 0.16]} />
         <meshStandardMaterial
-          color={SUZUKI_BLUE}
+          color={paintColor}
           roughness={0.10}
           metalness={0.35}
           clearcoat={1.0}
@@ -55,7 +50,7 @@ export default function TailSection({ position = [0, 0, 0], turnSignalsOn = fals
       <mesh position={[-0.05, rearTireR + 0.18, 0]}>
         <boxGeometry args={[0.08, 0.04, 0.13]} />
         <meshStandardMaterial
-          color={SUZUKI_BLUE}
+          color={paintColor}
           roughness={0.10}
           metalness={0.35}
           clearcoat={1.0}

@@ -1,7 +1,6 @@
-import { useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
 import * as THREE from 'three'
-import { SPECS, POS } from './dimensions'
+import { SPECS } from './dimensions'
 
 // KTM 390 Duke: WP USD (upside-down) front forks
 // 43mm fork diameter
@@ -18,20 +17,12 @@ export default function FrontFork({
   forkCompression = 0,
   steeringAngle = 0,
   headlightOn = true,
-  turnSignalsOn = false
+  turnSignalsOn = false,
+  blinkOn = false,
+  paintColor = '#FF6600',
 }) {
   const group = useRef()
-  const [blinkOn, setBlinkOn] = useState(false)
 
-  useFrame(() => {
-    if (turnSignalsOn) {
-      setBlinkOn(Math.sin(Date.now() * 0.01) > 0)
-    } else if (blinkOn) {
-      setBlinkOn(false)
-    }
-  })
-
-  const wb = SPECS.wheelbase
   const forkAngle = 0.42  // ~24 degrees rake (sportier than Honda)
   const forkTubeOD = SPECS.forkDiameter / 2  // 43mm / 2 = 21.5mm radius
   const forkSpacing = 0.075 // distance between fork legs
@@ -77,7 +68,7 @@ export default function FrontFork({
         {[-forkSpacing, forkSpacing].map((z, i) => (
           <mesh key={`cap-${i}`} position={[0, 0.33, z]}>
             <cylinderGeometry args={[forkTubeOD * 0.88, forkTubeOD * 0.88, 0.012, 12]} />
-            <meshStandardMaterial color="#FF6600" roughness={0.3} metalness={0.7} />
+            <meshStandardMaterial color={paintColor} roughness={0.3} metalness={0.7} />
           </mesh>
         ))}
 
@@ -283,8 +274,8 @@ export default function FrontFork({
         <mesh position={[0.02, 0.01, 0.04]} rotation={[0.5, 0, 0]}>
           <planeGeometry args={[0.02, 0.015]} />
           <meshStandardMaterial
-            color="#FF6600"
-            emissive="#FF6600"
+            color={paintColor}
+            emissive={paintColor}
             emissiveIntensity={headlightOn ? 0.5 : 0}
           />
         </mesh>

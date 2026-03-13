@@ -18,6 +18,15 @@ const useAnimationStore = create((set, get) => ({
 
   // View modes
   explodedView: false,
+  spokedWheels: false,    // false=alloy, true=steel/hubcap style
+  nightMode: false,
+  povCamera: false,       // driver POV
+  showCables: false,      // show under-hood wiring
+
+  // Selection & customization
+  selectedPart: null,
+  paintColor: '#001E50',  // VW blue default
+  turnSignalBlink: false,
 
   // Internal animation values (updated by useFrame)
   spinAngle: 0,
@@ -26,7 +35,6 @@ const useAnimationStore = create((set, get) => ({
   hoodAngle: 0,
   trunkAngle: 0,
   pistonOffset: 0,
-  turnSignalBlink: false,
   explodeOffset: 0,
 
   // Actions
@@ -39,7 +47,13 @@ const useAnimationStore = create((set, get) => ({
   toggleTurnSignals: () => set((s) => ({ turnSignals: !s.turnSignals })),
   toggleBrakeLights: () => set((s) => ({ brakeLights: !s.brakeLights })),
   toggleExplodedView: () => set((s) => ({ explodedView: !s.explodedView })),
+  toggleSpokedWheels: () => set((s) => ({ spokedWheels: !s.spokedWheels })),
+  toggleNightMode: () => set((s) => ({ nightMode: !s.nightMode })),
+  togglePovCamera: () => set((s) => ({ povCamera: !s.povCamera })),
+  toggleShowCables: () => set((s) => ({ showCables: !s.showCables })),
   setWheelSpeed: (speed) => set({ wheelSpeed: speed }),
+  setPaintColor: (color) => set({ paintColor: color }),
+  selectPart: (part) => set((s) => ({ selectedPart: s.selectedPart === part ? null : part })),
 
   // Update animation values
   setSpinAngle: (v) => set({ spinAngle: v }),
@@ -95,6 +109,17 @@ const useAnimationStore = create((set, get) => ({
         break;
       default:
         break;
+    }
+  },
+
+  // Tick - called from useFrame
+  tick: (delta) => {
+    const s = get();
+    // Turn signal blink
+    if (s.turnSignals) {
+      set({ turnSignalBlink: Math.sin(Date.now() * 0.01) > 0 });
+    } else if (s.turnSignalBlink) {
+      set({ turnSignalBlink: false });
     }
   },
 }));

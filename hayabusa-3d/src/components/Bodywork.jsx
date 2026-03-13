@@ -7,11 +7,11 @@ import { SPECS, POS } from './dimensions'
 // Front fairing with dual headlights, side fairings, belly pan
 // Ram-air intake ducts, tall windscreen
 // "Peregrine falcon" aerodynamic flowing curves
+// paintColor prop replaces hardcoded Suzuki blue
 
-const SUZUKI_BLUE = '#003DA5'
 const SILVER_ACCENT = '#c0c0c0'
 
-export default function Bodywork({ position = [0, 0, 0], fairingOpacity = 1.0 }) {
+export default function Bodywork({ position = [0, 0, 0], fairingOpacity = 1.0, paintColor = '#003DA5' }) {
   const group = useRef()
   const wb = SPECS.wheelbase
   const sh = SPECS.seatHeight
@@ -67,7 +67,7 @@ export default function Bodywork({ position = [0, 0, 0], fairingOpacity = 1.0 })
       <group position={[wb - 0.12, 0.42, -0.14]}>
         <mesh geometry={noseFairingGeometry}>
           <meshStandardMaterial
-            color={SUZUKI_BLUE}
+            color={paintColor}
             roughness={0.10}
             metalness={0.35}
             clearcoat={1.0}
@@ -116,7 +116,7 @@ export default function Bodywork({ position = [0, 0, 0], fairingOpacity = 1.0 })
       <group position={[wb * 0.5 - 0.05, 0.20, -0.175]} rotation={[0, 0, -0.05]}>
         <mesh geometry={sideFairingGeometry}>
           <meshStandardMaterial
-            color={SUZUKI_BLUE}
+            color={paintColor}
             roughness={0.10}
             metalness={0.35}
             clearcoat={1.0}
@@ -137,7 +137,7 @@ export default function Bodywork({ position = [0, 0, 0], fairingOpacity = 1.0 })
       <group position={[wb * 0.5 - 0.05, 0.20, 0.175]} rotation={[0, Math.PI, -0.05]}>
         <mesh geometry={sideFairingGeometry}>
           <meshStandardMaterial
-            color={SUZUKI_BLUE}
+            color={paintColor}
             roughness={0.10}
             metalness={0.35}
             clearcoat={1.0}
@@ -178,7 +178,7 @@ export default function Bodywork({ position = [0, 0, 0], fairingOpacity = 1.0 })
       <mesh position={[wb * 0.7, 0.62, 0]}>
         <boxGeometry args={[0.18, 0.08, 0.30]} />
         <meshStandardMaterial
-          color={SUZUKI_BLUE}
+          color={paintColor}
           roughness={0.10}
           metalness={0.35}
           clearcoat={1.0}
@@ -205,7 +205,7 @@ export default function Bodywork({ position = [0, 0, 0], fairingOpacity = 1.0 })
         <mesh key={`lower-${i}`} position={[wb * 0.58, 0.30, z]}>
           <boxGeometry args={[0.20, 0.14, 0.015]} />
           <meshStandardMaterial
-            color={SUZUKI_BLUE}
+            color={paintColor}
             roughness={0.12}
             metalness={0.35}
             transparent={isTransparent}
