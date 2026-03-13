@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
 import * as THREE from 'three'
 import { SPECS, POS } from './dimensions'
 
@@ -7,17 +6,8 @@ import { SPECS, POS } from './dimensions'
 // Monoshock suspension, rear drum brake
 // Rear tire: 100/90-18
 
-export default function TailSection({ position = [0, 0, 0], turnSignalsOn = false, headlightOn = true }) {
+export default function TailSection({ position = [0, 0, 0], turnSignalsOn = false, headlightOn = true, blinkOn = false, paintColor = '#cc0000' }) {
   const group = useRef()
-  const [blinkOn, setBlinkOn] = useState(false)
-
-  useFrame(() => {
-    if (turnSignalsOn) {
-      setBlinkOn(Math.sin(Date.now() * 0.01) > 0)
-    } else if (blinkOn) {
-      setBlinkOn(false)
-    }
-  })
   const rearTireR = SPECS.rearTireRadius
 
   return (
@@ -31,7 +21,7 @@ export default function TailSection({ position = [0, 0, 0], turnSignalsOn = fals
       {/* Tail cowl / body panel */}
       <mesh position={[0.02, rearTireR + 0.15, 0]}>
         <boxGeometry args={[0.13, 0.055, 0.14]} />
-        <meshStandardMaterial color="#cc0000" roughness={0.18} metalness={0.35} />
+        <meshStandardMaterial color={paintColor} roughness={0.18} metalness={0.35} />
       </mesh>
 
       {/* Tail light housing */}

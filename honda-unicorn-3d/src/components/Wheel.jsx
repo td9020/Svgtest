@@ -2,23 +2,19 @@ import { useRef } from 'react'
 import * as THREE from 'three'
 import { SPECS } from './dimensions'
 
-// Honda Unicorn 150:
-// Both wheels: 18-inch alloy rims (457.2mm diameter)
-// Front: 80/100-18 tire, OD ~618mm → radius 309mm
-// Rear: 100/90-18 tire, OD ~637mm → radius 318.5mm
-// Front disc brake: 240mm, Rear drum: 130mm
-
-const SPOKE_COUNT = 20
+const WIRE_SPOKE_COUNT = 36
+const ALLOY_SPOKE_COUNT = 5
 
 export default function Wheel({
   position = [0, 0, 0],
   isRear = false,
   hasFrontDisc = false,
   spinAngle = 0,
+  spoked = false,
 }) {
   const group = useRef()
 
-  const rimRadius = SPECS.rimRadius                       // 0.2286m
+  const rimRadius = SPECS.rimRadius
   const tireRadius = isRear ? SPECS.rearTireRadius : SPECS.frontTireRadius
   const tireWidth = isRear ? SPECS.rearTireWidth : SPECS.frontTireWidth
   const tubeRadius = (tireRadius - rimRadius) / 2 + tireWidth / 5
@@ -27,8 +23,8 @@ export default function Wheel({
   const spokeInner = hubRadius + 0.005
   const spokeOuter = rimRadius - 0.012
   const discRadius = hasFrontDisc
-    ? SPECS.frontDiscDiameter / 2   // 0.120m
-    : SPECS.rearDrumDiameter / 2    // 0.065m
+    ? SPECS.frontDiscDiameter / 2
+    : SPECS.rearDrumDiameter / 2
 
   return (
     <group ref={group} position={position} rotation={[0, 0, spinAngle]}>
@@ -41,13 +37,21 @@ export default function Wheel({
       {/* Rim - outer bead */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[rimRadius, 0.01, 16, 48]} />
-        <meshStandardMaterial color="#b0b0b0" roughness={0.15} metalness={0.85} />
+        <meshStandardMaterial
+          color={spoked ? '#c0c0c0' : '#b0b0b0'}
+          roughness={spoked ? 0.1 : 0.15}
+          metalness={spoked ? 0.9 : 0.85}
+        />
       </mesh>
 
       {/* Rim - inner bead */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[rimRadius - 0.022, 0.008, 12, 48]} />
-        <meshStandardMaterial color="#b0b0b0" roughness={0.2} metalness={0.8} />
+        <meshStandardMaterial
+          color={spoked ? '#c0c0c0' : '#b0b0b0'}
+          roughness={0.2}
+          metalness={0.8}
+        />
       </mesh>
 
       {/* Hub */}
@@ -70,9 +74,9 @@ export default function Wheel({
         <meshStandardMaterial color="#555" roughness={0.4} metalness={0.6} />
       </mesh>
 
-      {/* Spokes - cross-laced */}
-      {Array.from({ length: SPOKE_COUNT }).map((_, i) => {
-        const angle = (i / SPOKE_COUNT) * Math.PI * 2
+      {/* === SPOKED WHEELS (wire type) === */}
+      {spoked && Array.from({ length: WIRE_SPOKE_COUNT }).map((_, i) => {
+        const angle = (i / WIRE_SPOKE_COUNT) * Math.PI * 2
         const offset = (i % 2 === 0) ? 0.1 : -0.1
         const innerAngle = angle + offset
         const ix = Math.cos(innerAngle) * spokeInner
@@ -86,10 +90,54 @@ export default function Wheel({
         const zOff = (i % 2 === 0) ? 0.014 : -0.014
 
         return (
-          <mesh key={i} position={[mx, my, zOff]} rotation={[0, 0, rot]}>
-            <cylinderGeometry args={[0.0015, 0.0015, len, 3]} />
-            <meshStandardMaterial color="#ccc" roughness={0.25} metalness={0.75} />
-          </mesh>
+          <group key={i}>
+            {/* Wire spoke */}
+            <mesh position={[mx, my, zOff]} rotation={[0, 0, rot]}>
+              <cylinderGeometry args={[0.001, 0.001, len, 3]} />
+              <meshStandardMaterial color="#d0d0d0" roughness={0.1} metalness={0.9} />
+            </mesh>
+            {/* Spoke nipple at rim end */}
+            <mesh position={[ox, oy, zOff]}>
+              <sphereGeometry args={[0.002, 4, 4]} />
+              <meshStandardMaterial color="#c0c0c0" roughness={0.15} metalness={0.85} />
+            </mesh>
+          </group>
+        )
+      })}
+
+      {/* === ALLOY WHEELS (Y-spoke cast) === */}
+      {!spoked && Array.from({ length: ALLOY_SPOKE_COUNT }).map((_, i) => {
+        const angle = (i / ALLOY_SPOKE_COUNT) * Math.PI * 2
+        const mx = Math.cos(angle) * (spokeInner + spokeOuter) / 2
+        const my = Math.sin(angle) * (spokeInner + spokeOuter) / 2
+        const len = spokeOuter - spokeInner
+
+        return (
+          <group key={i}>
+            {/* Main spoke - wider, flat alloy */}
+            <mesh position={[mx, my, 0]} rotation={[0, 0, angle - Math.PI / 2]}>
+              <boxGeometry args={[0.022, len, 0.012]} />
+              <meshStandardMaterial color="#b0b0b0" roughness={0.15} metalness={0.85} />
+            </mesh>
+            {/* Split spoke (Y-shape) */}
+            {[-0.008, 0.008].map((off, j) => {
+              const splitAngle = angle + off * 3
+              const sx = Math.cos(splitAngle) * (spokeOuter * 0.7 + spokeInner * 0.3)
+              const sy = Math.sin(splitAngle) * (spokeOuter * 0.7 + spokeInner * 0.3)
+              const ex = Math.cos(angle) * spokeOuter
+              const ey = Math.sin(angle) * spokeOuter
+              const smx = (sx + ex) / 2
+              const smy = (sy + ey) / 2
+              const slen = Math.sqrt((ex - sx) ** 2 + (ey - sy) ** 2)
+              const srot = Math.atan2(ey - sy, ex - sx)
+              return (
+                <mesh key={j} position={[smx, smy, 0]} rotation={[0, 0, srot]}>
+                  <boxGeometry args={[0.01, slen, 0.012]} />
+                  <meshStandardMaterial color="#aaa" roughness={0.15} metalness={0.85} />
+                </mesh>
+              )
+            })}
+          </group>
         )
       })}
 

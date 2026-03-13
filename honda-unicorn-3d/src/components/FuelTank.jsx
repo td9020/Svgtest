@@ -6,9 +6,7 @@ import { useMultiCSG } from './CSGMesh'
 // Honda Unicorn 150: 13-litre fuel tank
 // Estimated: ~450mm long, ~300mm wide, ~220mm tall
 
-const HONDA_RED = '#cc0000'
-
-export default function FuelTank({ position = [0, 0, 0] }) {
+export default function FuelTank({ position = [0, 0, 0], paintColor = '#cc0000' }) {
   const group = useRef()
 
   // CSG: Tank body with knee cutouts and filler hole
@@ -60,7 +58,7 @@ export default function FuelTank({ position = [0, 0, 0] }) {
       {/* Tank body (CSG: with knee cutouts and filler hole) */}
       <mesh geometry={tankCSG} scale={[1, 1, 0.82]}>
         <meshStandardMaterial
-          color={HONDA_RED}
+          color={paintColor}
           roughness={0.12}
           metalness={0.45}
           clearcoat={1.0}

@@ -1,24 +1,9 @@
-import { useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
 import * as THREE from 'three'
 import { SPECS, POS } from './dimensions'
 
-// Honda Unicorn 150: Telescopic front fork
-// Rake angle ~26 degrees (typical for commuter bikes)
-// Fork tube diameter ~33mm
-
-export default function FrontFork({ position = [0, 0, 0], forkCompression = 0, steeringAngle = 0, headlightOn = true, turnSignalsOn = false }) {
+export default function FrontFork({ position = [0, 0, 0], forkCompression = 0, steeringAngle = 0, headlightOn = true, turnSignalsOn = false, blinkOn = false, paintColor = '#cc0000' }) {
   const group = useRef()
-  const [blinkOn, setBlinkOn] = useState(false)
-
-  useFrame(() => {
-    if (turnSignalsOn) {
-      // Blink at ~1.5 Hz
-      setBlinkOn(Math.sin(Date.now() * 0.01) > 0)
-    } else if (blinkOn) {
-      setBlinkOn(false)
-    }
-  })
 
   const wb = SPECS.wheelbase
   const forkAngle = 0.45  // ~26 degrees rake
@@ -81,7 +66,7 @@ export default function FrontFork({ position = [0, 0, 0], forkCompression = 0, s
         {/* Front fender - red */}
         <mesh position={[0.02, -0.13, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[SPECS.frontTireRadius - 0.01, SPECS.frontTireRadius - 0.01, 0.09, 16, 1, true, -0.8, 1.6]} />
-          <meshStandardMaterial color="#cc0000" roughness={0.25} metalness={0.25} side={THREE.DoubleSide} />
+          <meshStandardMaterial color={paintColor} roughness={0.25} metalness={0.25} side={THREE.DoubleSide} />
         </mesh>
 
         {/* Fender stay */}
