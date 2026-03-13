@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
 import * as THREE from 'three'
 import { SPECS, POS } from './dimensions'
 
@@ -10,17 +9,8 @@ import { SPECS, POS } from './dimensions'
 // Bullet-style round turn signals (chrome)
 // Twin rear shocks handled in Frame.jsx
 
-export default function TailSection({ position = [0, 0, 0], turnSignalsOn = false, headlightOn = true }) {
+export default function TailSection({ position = [0, 0, 0], turnSignalsOn = false, headlightOn = true, blinkOn = false, paintColor = '#2D4A22' }) {
   const group = useRef()
-  const [blinkOn, setBlinkOn] = useState(false)
-
-  useFrame(() => {
-    if (turnSignalsOn) {
-      setBlinkOn(Math.sin(Date.now() * 0.01) > 0)
-    } else if (blinkOn) {
-      setBlinkOn(false)
-    }
-  })
 
   const rearTireR = SPECS.rearTireRadius
 

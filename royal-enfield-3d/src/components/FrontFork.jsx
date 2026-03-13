@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
 import * as THREE from 'three'
 import { SPECS, POS } from './dimensions'
 
@@ -16,17 +15,10 @@ export default function FrontFork({
   steeringAngle = 0,
   headlightOn = true,
   turnSignalsOn = false,
+  blinkOn = false,
+  paintColor = '#2D4A22',
 }) {
   const group = useRef()
-  const [blinkOn, setBlinkOn] = useState(false)
-
-  useFrame(() => {
-    if (turnSignalsOn) {
-      setBlinkOn(Math.sin(Date.now() * 0.01) > 0)
-    } else if (blinkOn) {
-      setBlinkOn(false)
-    }
-  })
 
   const forkAngle = 0.44     // ~25 degrees rake (classic cruiser)
   const forkTubeOD = SPECS.forkTubeDiameter / 2  // 41mm / 2 = 20.5mm radius

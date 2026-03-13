@@ -9,9 +9,7 @@ import { useMultiCSG } from './CSGMesh'
 // Chrome fuel cap (center-mount)
 // Chrome emblem panels on sides
 
-const RE_GREEN = '#2D4A22'
-
-export default function FuelTank({ position = [0, 0, 0] }) {
+export default function FuelTank({ position = [0, 0, 0], paintColor = '#2D4A22' }) {
   const group = useRef()
 
   // CSG: Tank body with knee cutouts and filler hole
@@ -64,7 +62,7 @@ export default function FuelTank({ position = [0, 0, 0] }) {
       {/* Tank body (CSG: with knee cutouts and filler hole) */}
       <mesh geometry={tankCSG} scale={[1, 1, 0.85]}>
         <meshStandardMaterial
-          color={RE_GREEN}
+          color={paintColor}
           roughness={0.10}
           metalness={0.40}
           clearcoat={1.0}
