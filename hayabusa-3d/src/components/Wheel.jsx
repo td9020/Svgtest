@@ -34,15 +34,15 @@ export default function Wheel({
   const spokeOuter = rimRadius - 0.015
 
   return (
-    <group ref={group} position={position} rotation={[0, 0, spinAngle]}>
+    <group ref={group} position={position} rotation={[0, 0, -spinAngle]}>
       {/* Tire - wider for rear */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
+      <mesh>
         <torusGeometry args={[tireMidRadius, tubeRadius, 24, 48]} />
         <meshStandardMaterial color="#1a1a1a" roughness={0.92} metalness={0.03} />
       </mesh>
 
       {/* Rim - outer bead */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
+      <mesh>
         <torusGeometry args={[rimRadius, 0.012, 16, 48]} />
         <meshStandardMaterial
           color={spoked ? '#c0c0c0' : '#b0b0b0'}
@@ -52,7 +52,7 @@ export default function Wheel({
       </mesh>
 
       {/* Rim - inner bead */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
+      <mesh>
         <torusGeometry args={[rimRadius - 0.025, 0.009, 12, 48]} />
         <meshStandardMaterial
           color={spoked ? '#c0c0c0' : '#b0b0b0'}
@@ -69,7 +69,7 @@ export default function Wheel({
 
       {/* Hub flanges */}
       {[-0.03, 0.03].map((z, i) => (
-        <mesh key={i} rotation={[Math.PI / 2, 0, 0]} position={[0, z, 0]}>
+        <mesh key={i} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, z]}>
           <cylinderGeometry args={[hubRadius + 0.008, hubRadius + 0.008, 0.008, 24]} />
           <meshStandardMaterial color="#999" roughness={0.25} metalness={0.75} />
         </mesh>
@@ -99,7 +99,7 @@ export default function Wheel({
         return (
           <group key={i}>
             {/* Wire spoke */}
-            <mesh position={[mx, my, zOff]} rotation={[0, 0, rot]}>
+            <mesh position={[mx, my, zOff]} rotation={[0, 0, rot - Math.PI / 2]}>
               <cylinderGeometry args={[0.001, 0.001, len, 3]} />
               <meshStandardMaterial color="#d0d0d0" roughness={0.1} metalness={0.9} />
             </mesh>
@@ -262,7 +262,7 @@ export default function Wheel({
               <cylinderGeometry args={[0.065, 0.065, 0.008, 32]} />
               <meshStandardMaterial color="#555" roughness={0.35} metalness={0.65} />
             </mesh>
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <mesh>
               <torusGeometry args={[0.065, 0.004, 6, 44]} />
               <meshStandardMaterial color="#666" roughness={0.4} metalness={0.6} />
             </mesh>
@@ -271,7 +271,7 @@ export default function Wheel({
               const a = (i / 6) * Math.PI * 2
               const r = 0.042
               return (
-                <mesh key={i} position={[Math.cos(a) * r, Math.sin(a) * r, 0.058]} rotation={[Math.PI / 2, 0, 0]}>
+                <mesh key={i} position={[Math.cos(a) * r, Math.sin(a) * r, 0.004]}>
                   <circleGeometry args={[0.010, 8]} />
                   <meshStandardMaterial color="#333" side={THREE.DoubleSide} />
                 </mesh>

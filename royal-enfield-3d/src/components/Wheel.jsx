@@ -33,15 +33,15 @@ export default function Wheel({
     : SPECS.rearDrumDiameter / 2    // 0.0765m
 
   return (
-    <group ref={group} position={position} rotation={[0, 0, spinAngle]}>
+    <group ref={group} position={position} rotation={[0, 0, -spinAngle]}>
       {/* Tire - black rubber */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
+      <mesh>
         <torusGeometry args={[tireMidRadius, tubeRadius, 24, 48]} />
         <meshStandardMaterial color="#1a1a1a" roughness={0.92} metalness={0.03} />
       </mesh>
 
       {/* Chrome rim - outer bead */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
+      <mesh>
         <torusGeometry args={[rimRadius, 0.012, 16, 48]} />
         <meshStandardMaterial
           color={spoked ? '#ddd' : '#b0b0b0'}
@@ -51,7 +51,7 @@ export default function Wheel({
       </mesh>
 
       {/* Chrome rim - inner bead */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
+      <mesh>
         <torusGeometry args={[rimRadius - 0.024, 0.009, 12, 48]} />
         <meshStandardMaterial
           color={spoked ? '#ddd' : '#b0b0b0'}
@@ -61,7 +61,7 @@ export default function Wheel({
       </mesh>
 
       {/* Chrome rim center section */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
+      <mesh>
         <torusGeometry args={[rimRadius - 0.012, 0.006, 8, 48]} />
         <meshStandardMaterial color={spoked ? '#ccc' : '#aaa'} roughness={0.1} metalness={0.88} />
       </mesh>
@@ -74,7 +74,7 @@ export default function Wheel({
 
       {/* Hub flanges - where spokes attach */}
       {[-0.030, 0.030].map((z, i) => (
-        <mesh key={i} rotation={[Math.PI / 2, 0, 0]} position={[0, z, 0]}>
+        <mesh key={i} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, z]}>
           <cylinderGeometry args={[hubRadius + 0.008, hubRadius + 0.008, 0.007, 24]} />
           <meshStandardMaterial color="#ccc" roughness={0.12} metalness={0.88} />
         </mesh>
@@ -105,7 +105,7 @@ export default function Wheel({
         return (
           <group key={i}>
             {/* Wire spoke */}
-            <mesh position={[mx, my, zOff]} rotation={[0, 0, rot]}>
+            <mesh position={[mx, my, zOff]} rotation={[0, 0, rot - Math.PI / 2]}>
               <cylinderGeometry args={[0.0012, 0.0012, len, 3]} />
               <meshStandardMaterial color="#ddd" roughness={0.15} metalness={0.85} />
             </mesh>
@@ -144,7 +144,7 @@ export default function Wheel({
               const slen = Math.sqrt((ex - sx) ** 2 + (ey - sy) ** 2)
               const srot = Math.atan2(ey - sy, ex - sx)
               return (
-                <mesh key={j} position={[smx, smy, 0]} rotation={[0, 0, srot]}>
+                <mesh key={j} position={[smx, smy, 0]} rotation={[0, 0, srot - Math.PI / 2]}>
                   <boxGeometry args={[0.011, slen, 0.014]} />
                   <meshStandardMaterial color="#aaa" roughness={0.15} metalness={0.85} />
                 </mesh>
@@ -197,7 +197,7 @@ export default function Wheel({
             <meshStandardMaterial color="#888" roughness={0.35} metalness={0.65} />
           </mesh>
           {/* Drum backing plate */}
-          <mesh position={[0, 0, 0.058]} rotation={[Math.PI / 2, 0, 0]}>
+          <mesh position={[0, 0, 0.058]}>
             <circleGeometry args={[discRadius + 0.005, 24]} />
             <meshStandardMaterial color="#777" roughness={0.4} metalness={0.6} side={THREE.DoubleSide} />
           </mesh>

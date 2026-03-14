@@ -33,15 +33,15 @@ export default function Wheel({
     : SPECS.frontDiscDiameter / 2  // 0.160m
 
   return (
-    <group ref={group} position={position} rotation={[0, 0, spinAngle]}>
+    <group ref={group} position={position} rotation={[0, 0, -spinAngle]}>
       {/* Tire */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
+      <mesh>
         <torusGeometry args={[tireMidRadius, tubeRadius, 24, 48]} />
         <meshStandardMaterial color="#1a1a1a" roughness={0.92} metalness={0.03} />
       </mesh>
 
       {/* Rim - outer bead */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
+      <mesh>
         <torusGeometry args={[rimRadius, 0.012, 16, 48]} />
         <meshStandardMaterial
           color={spoked ? '#c0c0c0' : '#1a1a1a'}
@@ -51,7 +51,7 @@ export default function Wheel({
       </mesh>
 
       {/* Rim - inner bead */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
+      <mesh>
         <torusGeometry args={[rimRadius - 0.025, 0.009, 12, 48]} />
         <meshStandardMaterial
           color={spoked ? '#c0c0c0' : '#1a1a1a'}
@@ -68,7 +68,7 @@ export default function Wheel({
 
       {/* Hub flanges */}
       {[-0.028, 0.028].map((z, i) => (
-        <mesh key={i} rotation={[Math.PI / 2, 0, 0]} position={[0, z, 0]}>
+        <mesh key={i} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, z]}>
           <cylinderGeometry args={[hubRadius + 0.008, hubRadius + 0.008, 0.006, 24]} />
           <meshStandardMaterial color="#333" roughness={0.25} metalness={0.75} />
         </mesh>
@@ -98,7 +98,7 @@ export default function Wheel({
         return (
           <group key={i}>
             {/* Wire spoke */}
-            <mesh position={[mx, my, zOff]} rotation={[0, 0, rot]}>
+            <mesh position={[mx, my, zOff]} rotation={[0, 0, rot - Math.PI / 2]}>
               <cylinderGeometry args={[0.001, 0.001, len, 3]} />
               <meshStandardMaterial color="#d0d0d0" roughness={0.1} metalness={0.9} />
             </mesh>
